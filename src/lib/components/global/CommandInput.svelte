@@ -5,6 +5,7 @@
 	import { ChevronDown } from '@lucide/svelte';
 	import { todoService } from '$lib/features/todo';
 	import { tick } from 'svelte';
+	import MetadataInput from './MetadataInput.svelte';
 
 	const PREFIXES = {
 		notes: 'with note ',
@@ -39,6 +40,16 @@
 	let priorityInput = $state<HTMLInputElement | null>(null);
 	let titleInput = $state<HTMLInputElement | null>(null);
 
+	let metadata = $state<
+		{
+			field: FieldKey;
+			value: string;
+			input: HTMLInputElement | null;
+			prefix: string;
+			placeHolder: string;
+		}[]
+	>([]);
+
 	let hasTitle = $derived(title.trim().length > 0);
 
 	function getShowState(field: FieldKey): boolean {
@@ -62,18 +73,73 @@
 		switch (field) {
 			case 'notes':
 				showNotes = !isCurrentlyShown;
+				if (!showNotes) {
+					metadata = metadata.filter((m) => m.field !== 'notes');
+				} else {
+					metadata.push({
+						field: 'notes',
+						value: notesValue,
+						input: notesInput,
+						prefix: PREFIXES.notes,
+						placeHolder: 'input notes'
+					});
+				}
 				break;
 			case 'dateTime':
 				showDateTime = !isCurrentlyShown;
+				if (!showDateTime) {
+					metadata = metadata.filter((m) => m.field !== 'dateTime');
+				} else {
+					metadata.push({
+						field: 'dateTime',
+						value: dateTimeValue,
+						input: dateTimeInput,
+						prefix: PREFIXES.dateTime,
+						placeHolder: 'ex: tomorrow 3pm'
+					});
+				}
 				break;
 			case 'deadline':
 				showDeadline = !isCurrentlyShown;
+				if (!showDeadline) {
+					metadata = metadata.filter((m) => m.field !== 'deadline');
+				} else {
+					metadata.push({
+						field: 'deadline',
+						value: deadlineValue,
+						input: deadlineInput,
+						prefix: PREFIXES.deadline,
+						placeHolder: 'ex: tomorrow 3pm'
+					});
+				}
 				break;
 			case 'repeat':
 				showRepeat = !isCurrentlyShown;
+				if (!showRepeat) {
+					metadata = metadata.filter((m) => m.field !== 'repeat');
+				} else {
+					metadata.push({
+						field: 'repeat',
+						value: repeatValue,
+						input: repeatInput,
+						prefix: PREFIXES.repeat,
+						placeHolder: 'day, weekday, or weekend'
+					});
+				}
 				break;
 			case 'priority':
 				showPriority = !isCurrentlyShown;
+				if (!showPriority) {
+					metadata = metadata.filter((m) => m.field !== 'priority');
+				} else {
+					metadata.push({
+						field: 'priority',
+						value: priorityValue,
+						input: priorityInput,
+						prefix: PREFIXES.priority,
+						placeHolder: 'ex: high, medium, or low'
+					});
+				}
 				break;
 		}
 
@@ -136,22 +202,27 @@
 				case 'notes':
 					showNotes = false;
 					notesValue = '';
+					metadata = metadata.filter((m) => m.field !== 'notes');
 					break;
 				case 'dateTime':
 					showDateTime = false;
 					dateTimeValue = '';
+					metadata = metadata.filter((m) => m.field !== 'dateTime');
 					break;
 				case 'deadline':
 					showDeadline = false;
 					deadlineValue = '';
+					metadata = metadata.filter((m) => m.field !== 'deadline');
 					break;
 				case 'repeat':
 					showRepeat = false;
 					repeatValue = '';
+					metadata = metadata.filter((m) => m.field !== 'repeat');
 					break;
 				case 'priority':
 					showPriority = false;
 					priorityValue = '';
+					metadata = metadata.filter((m) => m.field !== 'priority');
 					break;
 			}
 			focusPreviousInput(field);
@@ -185,6 +256,7 @@
 		showDeadline = false;
 		showRepeat = false;
 		showPriority = false;
+		metadata = [];
 	}
 </script>
 
@@ -195,101 +267,30 @@
 				type="text"
 				bind:this={titleInput}
 				bind:value={title}
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						handleCreate();
+					}
+				}}
 				placeholder="Create a task..."
 				class="outline-none placeholder:text-muted-foreground {hasTitle
 					? 'field-sizing-content'
 					: 'w-full'}"
 			/>
 
-			{#if showNotes}
-				<span>{PREFIXES.notes}</span>
-				<input
-					type="text"
-					bind:this={notesInput}
-					bind:value={notesValue}
-					placeholder="input notes"
-					oninput={() => handleFieldInput('notes', notesValue)}
-					onkeydown={(e) => {
-						if (e.key === 'Backspace' && notesValue.trim() === '') {
-							e.preventDefault();
-							toggleField('notes');
-						}
-					}}
-					class="field-sizing-content outline-none placeholder:text-muted-foreground"
+			{#each metadata as { field, prefix, placeHolder }, i (field)}
+				<MetadataInput
+					show={getShowState(field)}
+					{field}
+					bind:value={metadata[i].value}
+					bind:input={metadata[i].input}
+					{prefix}
+					{placeHolder}
+					handleFieldInput={(value) => handleFieldInput(field, value)}
+					{handleCreate}
+					toggleField={() => toggleField(field)}
 				/>
-			{/if}
-
-			{#if showDateTime}
-				<span>{PREFIXES.dateTime}</span>
-				<input
-					type="text"
-					bind:this={dateTimeInput}
-					bind:value={dateTimeValue}
-					placeholder="ex: tomorrow 3pm"
-					oninput={() => handleFieldInput('dateTime', dateTimeValue)}
-					onkeydown={(e) => {
-						if (e.key === 'Backspace' && dateTimeValue.trim() === '') {
-							e.preventDefault();
-							toggleField('dateTime');
-						}
-					}}
-					class="field-sizing-content outline-none placeholder:text-muted-foreground"
-				/>
-			{/if}
-
-			{#if showDeadline}
-				<span>{PREFIXES.deadline}</span>
-				<input
-					type="text"
-					bind:this={deadlineInput}
-					bind:value={deadlineValue}
-					placeholder="ex: tomorrow 3pm"
-					oninput={() => handleFieldInput('deadline', deadlineValue)}
-					onkeydown={(e) => {
-						if (e.key === 'Backspace' && deadlineValue.trim() === '') {
-							e.preventDefault();
-							toggleField('deadline');
-						}
-					}}
-					class="field-sizing-content outline-none placeholder:text-muted-foreground"
-				/>
-			{/if}
-
-			{#if showRepeat}
-				<span>{PREFIXES.repeat}</span>
-				<input
-					type="text"
-					bind:this={repeatInput}
-					bind:value={repeatValue}
-					placeholder="day, weekday, or weekend"
-					oninput={() => handleFieldInput('repeat', repeatValue)}
-					onkeydown={(e) => {
-						if (e.key === 'Backspace' && repeatValue.trim() === '') {
-							e.preventDefault();
-							toggleField('repeat');
-						}
-					}}
-					class="field-sizing-content outline-none placeholder:text-muted-foreground"
-				/>
-			{/if}
-
-			{#if showPriority}
-				<span>{PREFIXES.priority}</span>
-				<input
-					type="text"
-					bind:this={priorityInput}
-					bind:value={priorityValue}
-					placeholder="low, medium, or high"
-					oninput={() => handleFieldInput('priority', priorityValue)}
-					onkeydown={(e) => {
-						if (e.key === 'Backspace' && priorityValue.trim() === '') {
-							e.preventDefault();
-							toggleField('priority');
-						}
-					}}
-					class="field-sizing-content outline-none placeholder:text-muted-foreground"
-				/>
-			{/if}
+			{/each}
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
@@ -328,9 +329,7 @@
 	</Card.Content>
 	<Card.Footer class="gap-2">
 		<Card.Action class="ml-auto">
-			<Button size="xs" class="rounded-full" disabled={!hasTitle} onclick={handleCreate}>
-				Save Task
-			</Button>
+			<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save Task</Button>
 		</Card.Action>
 	</Card.Footer>
 </Card.Root>
