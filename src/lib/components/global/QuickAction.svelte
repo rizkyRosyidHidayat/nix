@@ -260,76 +260,74 @@
 	}
 </script>
 
-<Card.Root class="w-full pt-3">
-	<Card.Content>
-		<div class="flex min-h-8 flex-wrap items-center gap-1">
-			<input
-				type="text"
-				bind:this={titleInput}
-				bind:value={title}
-				onkeydown={(e) => {
-					if (e.key === 'Enter') {
-						handleCreate();
-					}
-				}}
-				placeholder="Create a task..."
-				class="outline-none placeholder:text-muted-foreground {hasTitle
-					? 'field-sizing-content'
-					: 'w-full'}"
-			/>
-
-			{#each metadata as { field, prefix, placeHolder }, i (field)}
-				<MetadataInput
-					show={getShowState(field)}
-					{field}
-					bind:value={metadata[i].value}
-					bind:input={metadata[i].input}
-					{prefix}
-					{placeHolder}
-					handleFieldInput={(value) => handleFieldInput(field, value)}
-					{handleCreate}
-					toggleField={() => toggleField(field)}
+<Card.Root class="w-full py-4">
+	<Card.Content class="pr-4">
+		<div class="flex flex-wrap items-center justify-end gap-4">
+			<div class="mr-auto flex min-w-[80%] flex-wrap items-center gap-1">
+				<input
+					type="text"
+					bind:this={titleInput}
+					bind:value={title}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							handleCreate();
+						}
+					}}
+					placeholder="Add your todo here..."
+					class="outline-none placeholder:text-muted-foreground {hasTitle
+						? 'field-sizing-content'
+						: 'w-full'}"
 				/>
-			{/each}
 
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-					{#snippet child({ props }: any)}
-						{#if hasTitle && title?.length >= 6}
-							<Button size="icon-xs" variant="ghost" class="mt-0.5" {...props}>
-								<ChevronDown />
-							</Button>
-						{/if}
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Label>Add Information</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item onclick={() => toggleField('notes')}>
-							Notes {showNotes ? '✓' : ''}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => toggleField('dateTime')}>
-							Date/Time {showDateTime ? '✓' : ''}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => toggleField('deadline')}>
-							Deadline {showDeadline ? '✓' : ''}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => toggleField('repeat')}>
-							Repeat task {showRepeat ? '✓' : ''}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => toggleField('priority')}>
-							Priority {showPriority ? '✓' : ''}
-						</DropdownMenu.Item>
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+				{#each metadata as { field, prefix, placeHolder }, i (field)}
+					<MetadataInput
+						show={getShowState(field)}
+						{field}
+						bind:value={metadata[i].value}
+						bind:input={metadata[i].input}
+						{prefix}
+						{placeHolder}
+						handleFieldInput={(value) => handleFieldInput(field, value)}
+						{handleCreate}
+						toggleField={() => toggleField(field)}
+					/>
+				{/each}
+
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
+						{#snippet child({ props }: any)}
+							{#if hasTitle && title?.length >= 6}
+								<Button size="icon-xs" variant="ghost" class="mt-0.5" {...props}>
+									<ChevronDown />
+								</Button>
+							{/if}
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Label>Add Information</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item onclick={() => toggleField('notes')}>
+								Notes {showNotes ? '✓' : ''}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => toggleField('dateTime')}>
+								Date/Time {showDateTime ? '✓' : ''}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => toggleField('deadline')}>
+								Deadline {showDeadline ? '✓' : ''}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => toggleField('repeat')}>
+								Repeat todo {showRepeat ? '✓' : ''}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => toggleField('priority')}>
+								Priority {showPriority ? '✓' : ''}
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+			<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save Todo</Button>
 		</div>
 	</Card.Content>
-	<Card.Footer class="gap-2">
-		<Card.Action class="ml-auto">
-			<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save Task</Button>
-		</Card.Action>
-	</Card.Footer>
 </Card.Root>
