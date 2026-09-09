@@ -9,6 +9,8 @@
 	import MetadataInput from './MetadataInput.svelte';
 	import { globalState } from '$lib/stores/global.svelte';
 
+	let { oncreate }: { oncreate?: () => void } = $props();
+
 	const PREFIXES = {
 		notes: 'with note ',
 		dateTime: 'at ',
@@ -46,6 +48,12 @@
 	>([]);
 
 	let hasTitle = $derived(title.trim().length > 0);
+
+	$effect(() => {
+		if (titleInput) {
+			titleInput.focus();
+		}
+	});
 
 	function getShowState(field: FieldKey): boolean {
 		switch (field) {
@@ -286,6 +294,7 @@
 		}
 
 		resetForm();
+		oncreate?.();
 	}
 
 	function resetForm() {

@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { CheckSquare, Home, Plus, ChevronRight, Settings } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
+	import QuickAction from './QuickAction.svelte';
 
 	const navItems = [
 		{
@@ -38,9 +39,21 @@
 	let isHiddenItemSelected = $derived(
 		!isHovered && navItems.slice(3).some((item) => item.domain === activatedDomain)
 	);
+
+	let showQuickAction = $state(false);
 </script>
 
-<div class="sticky bottom-4 z-10 mx-auto flex w-full max-w-max gap-4">
+<!-- cover background layer -->
+{#if showQuickAction}
+	<div
+		role="presentation"
+		aria-hidden="true"
+		class="fixed inset-0 z-10 bg-background/50 backdrop-blur-xs transition-all duration-200"
+		onclick={() => (showQuickAction = false)}
+	></div>
+{/if}
+
+<div class="sticky bottom-4 z-10 mx-auto flex w-full max-w-2xl justify-center gap-4">
 	<div
 		role="navigation"
 		aria-label="Main Navigation"
@@ -75,9 +88,19 @@
 			</div>
 		{/if}
 	</div>
+	{#if showQuickAction}
+		<div
+			transition:slide={{ axis: 'y', duration: 200 }}
+			class="absolute bottom-full left-1/2 mb-4 w-full -translate-x-1/2"
+		>
+			<QuickAction oncreate={() => (showQuickAction = false)} />
+		</div>
+	{/if}
 	<button
-		class="focus-visible:outline-none} flex size-10 cursor-pointer items-center justify-center rounded-3xl bg-primary text-primary-foreground transition-all duration-200 outline-none"
+		onclick={() => (showQuickAction = !showQuickAction)}
+		class="flex size-10 cursor-pointer items-center justify-center rounded-3xl bg-primary text-primary-foreground transition-all duration-200 outline-none focus-visible:outline-none"
+		aria-label="Add new todo"
 	>
-		<Plus size={16} />
+		<Plus size={16} class={showQuickAction ? 'rotate-45' : ''} />
 	</button>
 </div>
