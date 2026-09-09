@@ -19,7 +19,7 @@
 	} from '@lucide/svelte';
 	import { todoState } from '$lib/features/todo';
 	import MetadataInput from '$lib/components/global/MetadataInput.svelte';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { todo }: { todo: Todo } = $props();
@@ -103,25 +103,13 @@
 	let isEditingTitle = $state(false);
 
 	// Form draft values
-	let title = $state(todo.title);
-	let notesValue = $state(todo.notes ?? '');
-	let dateTimeValue = $state(formatDateTime(todo.startDate, todo.startTime));
-	let deadlineValue = $state(formatDateTime(todo.dueDate, todo.endTime));
-	let repeatValue = $state(todo.interval ?? '');
-	let priorityValue = $state(todo.priority ?? '');
-
-	let showNotes = $state(Boolean(todo.notes));
-	let showDateTime = $state(Boolean(todo.startDate || todo.startTime));
-	let showDeadline = $state(Boolean(todo.dueDate || todo.endTime));
-	let showRepeat = $state(Boolean(todo.interval));
-	let showPriority = $state(Boolean(todo.priority));
-
+	let title = $state(untrack(() => todo.title));
 	let titleInput = $state<HTMLInputElement | null>(null);
-	let metadata = $state<MetadataItem[]>(buildInitialMetadata(todo));
+	let metadata = $state<MetadataItem[]>(untrack(() => buildInitialMetadata(todo)));
 
 	// Synchronize state when the todo prop updates externally (e.g. from database/store updates)
-	let lastUpdatedAt = $state(todo.updatedAt);
-	let lastTodoId = $state(todo.id);
+	let lastUpdatedAt = $state(untrack(() => todo.updatedAt));
+	let lastTodoId = $state(untrack(() => todo.id));
 
 	$effect(() => {
 		// If the todo ID changed or external updatedAt changed while not actively editing, sync
@@ -132,33 +120,12 @@
 			lastTodoId = todo.id;
 			lastUpdatedAt = todo.updatedAt;
 			title = todo.title;
-			notesValue = todo.notes ?? '';
-			dateTimeValue = formatDateTime(todo.startDate, todo.startTime);
-			deadlineValue = formatDateTime(todo.dueDate, todo.endTime);
-			repeatValue = todo.interval ?? '';
-			priorityValue = todo.priority ?? '';
-			showNotes = Boolean(todo.notes);
-			showDateTime = Boolean(todo.startDate || todo.startTime);
-			showDeadline = Boolean(todo.dueDate || todo.endTime);
-			showRepeat = Boolean(todo.interval);
-			showPriority = Boolean(todo.priority);
 			metadata = buildInitialMetadata(todo);
 		}
 	});
 
 	function getShowState(field: FieldKey): boolean {
-		switch (field) {
-			case 'notes':
-				return showNotes;
-			case 'dateTime':
-				return showDateTime;
-			case 'deadline':
-				return showDeadline;
-			case 'repeat':
-				return showRepeat;
-			case 'priority':
-				return showPriority;
-		}
+		return metadata.some((m) => m.field === field);
 	}
 
 	function getInputRef(field: FieldKey): HTMLInputElement | null {
@@ -193,148 +160,52 @@
 	async function toggleField(field: FieldKey) {
 		const isCurrentlyShown = getShowState(field);
 
-		switch (field) {
-			case 'notes':
-				showNotes = !isCurrentlyShown;
-				if (!showNotes) {
-					metadata = metadata.filter((m) => m.field !== 'notes');
-					notesValue = '';
-				} else {
-					metadata.push({
-						field: 'notes',
-						value: notesValue,
-						input: null,
-						prefix: PREFIXES.notes,
-						placeHolder: 'input notes'
-					});
-				}
-				break;
-			case 'dateTime':
-				showDateTime = !isCurrentlyShown;
-				if (!showDateTime) {
-					metadata = metadata.filter((m) => m.field !== 'dateTime');
-					dateTimeValue = '';
-				} else {
-					metadata.push({
-						field: 'dateTime',
-						value: dateTimeValue,
-						input: null,
-						prefix: PREFIXES.dateTime,
-						placeHolder: 'ex: tomorrow 3pm'
-					});
-				}
-				break;
-			case 'deadline':
-				showDeadline = !isCurrentlyShown;
-				if (!showDeadline) {
-					metadata = metadata.filter((m) => m.field !== 'deadline');
-					deadlineValue = '';
-				} else {
-					metadata.push({
-						field: 'deadline',
-						value: deadlineValue,
-						input: null,
-						prefix: PREFIXES.deadline,
-						placeHolder: 'ex: tomorrow 3pm'
-					});
-				}
-				break;
-			case 'repeat':
-				showRepeat = !isCurrentlyShown;
-				if (!showRepeat) {
-					metadata = metadata.filter((m) => m.field !== 'repeat');
-					repeatValue = '';
-				} else {
-					metadata.push({
-						field: 'repeat',
-						value: repeatValue,
-						input: null,
-						prefix: PREFIXES.repeat,
-						placeHolder: 'day, weekday, or weekend'
-					});
-				}
-				break;
-			case 'priority':
-				showPriority = !isCurrentlyShown;
-				if (!showPriority) {
-					metadata = metadata.filter((m) => m.field !== 'priority');
-					priorityValue = '';
-				} else {
-					metadata.push({
-						field: 'priority',
-						value: priorityValue,
-						input: null,
-						prefix: PREFIXES.priority,
-						placeHolder: 'ex: high, medium, or low'
-					});
-				}
-				break;
-		}
-
-		if (!isCurrentlyShown) {
+		if (isCurrentlyShown) {
+			metadata = metadata.filter((m) => m.field !== field);
+			await handleSave();
+			focusPreviousInput(field);
+		} else {
+			let placeHolder = '';
+			switch (field) {
+				case 'notes':
+					placeHolder = 'input notes';
+					break;
+				case 'dateTime':
+					placeHolder = 'ex: tomorrow 3pm';
+					break;
+				case 'deadline':
+					placeHolder = 'ex: tomorrow 3pm';
+					break;
+				case 'repeat':
+					placeHolder = 'day, weekday, or weekend';
+					break;
+				case 'priority':
+					placeHolder = 'ex: high, medium, or low';
+					break;
+			}
+			metadata.push({
+				field,
+				value: '',
+				input: null,
+				prefix: PREFIXES[field],
+				placeHolder
+			});
 			await tick();
 			const inputRef = getInputRef(field);
 			if (inputRef) {
 				inputRef.focus();
 			}
-		} else {
-			await handleSave();
-			focusPreviousInput(field);
 		}
 	}
 
 	function handleFieldInput(field: FieldKey, value: string) {
-		switch (field) {
-			case 'notes':
-				notesValue = value;
-				break;
-			case 'dateTime':
-				dateTimeValue = value;
-				break;
-			case 'deadline':
-				deadlineValue = value;
-				break;
-			case 'repeat':
-				repeatValue = value;
-				break;
-			case 'priority':
-				priorityValue = value;
-				break;
-		}
-
 		const item = metadata.find((m) => m.field === field);
 		if (item) {
 			item.value = value;
 		}
 
 		if (value === '') {
-			switch (field) {
-				case 'notes':
-					showNotes = false;
-					notesValue = '';
-					metadata = metadata.filter((m) => m.field !== 'notes');
-					break;
-				case 'dateTime':
-					showDateTime = false;
-					dateTimeValue = '';
-					metadata = metadata.filter((m) => m.field !== 'dateTime');
-					break;
-				case 'deadline':
-					showDeadline = false;
-					deadlineValue = '';
-					metadata = metadata.filter((m) => m.field !== 'deadline');
-					break;
-				case 'repeat':
-					showRepeat = false;
-					repeatValue = '';
-					metadata = metadata.filter((m) => m.field !== 'repeat');
-					break;
-				case 'priority':
-					showPriority = false;
-					priorityValue = '';
-					metadata = metadata.filter((m) => m.field !== 'priority');
-					break;
-			}
+			metadata = metadata.filter((m) => m.field !== field);
 			handleSave();
 			focusPreviousInput(field);
 		}
@@ -346,35 +217,20 @@
 			return;
 		}
 
-		for (const item of metadata) {
-			switch (item.field) {
-				case 'notes':
-					notesValue = item.value;
-					break;
-				case 'dateTime':
-					dateTimeValue = item.value;
-					break;
-				case 'deadline':
-					deadlineValue = item.value;
-					break;
-				case 'repeat':
-					repeatValue = item.value;
-					break;
-				case 'priority':
-					priorityValue = item.value;
-					break;
-			}
-		}
+		const getVal = (field: FieldKey) => {
+			const item = metadata.find((m) => m.field === field);
+			return item ? item.value.trim() || undefined : undefined;
+		};
 
 		isSaving = true;
 		try {
 			const result = await todoState.updateFromCommand(todo.id, {
 				title: title.trim(),
-				notes: showNotes ? notesValue.trim() || undefined : undefined,
-				dateTime: showDateTime ? dateTimeValue.trim() || undefined : undefined,
-				deadline: showDeadline ? deadlineValue.trim() || undefined : undefined,
-				repeat: showRepeat ? repeatValue.trim() || undefined : undefined,
-				priority: showPriority ? priorityValue.trim() || undefined : undefined
+				notes: getVal('notes'),
+				dateTime: getVal('dateTime'),
+				deadline: getVal('deadline'),
+				repeat: getVal('repeat'),
+				priority: getVal('priority')
 			});
 
 			if (result.state === 'error' && result.error) {
@@ -658,27 +514,27 @@
 								<DropdownMenu.Item onclick={() => toggleField('notes')} class="gap-2 text-xs">
 									<FileText size={13} class="text-muted-foreground" />
 									<span class="flex-1">Notes</span>
-									{#if showNotes}<Check size={13} class="text-primary" />{/if}
+									{#if getShowState('notes')}<Check size={13} class="text-primary" />{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={() => toggleField('dateTime')} class="gap-2 text-xs">
 									<Calendar size={13} class="text-muted-foreground" />
 									<span class="flex-1">Date/Time</span>
-									{#if showDateTime}<Check size={13} class="text-primary" />{/if}
+									{#if getShowState('dateTime')}<Check size={13} class="text-primary" />{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={() => toggleField('deadline')} class="gap-2 text-xs">
 									<Clock size={13} class="text-muted-foreground" />
 									<span class="flex-1">Deadline</span>
-									{#if showDeadline}<Check size={13} class="text-primary" />{/if}
+									{#if getShowState('deadline')}<Check size={13} class="text-primary" />{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={() => toggleField('repeat')} class="gap-2 text-xs">
 									<Repeat size={13} class="text-muted-foreground" />
 									<span class="flex-1">Repeat todo</span>
-									{#if showRepeat}<Check size={13} class="text-primary" />{/if}
+									{#if getShowState('repeat')}<Check size={13} class="text-primary" />{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={() => toggleField('priority')} class="gap-2 text-xs">
 									<Flag size={13} class="text-muted-foreground" />
 									<span class="flex-1">Priority</span>
-									{#if showPriority}<Check size={13} class="text-primary" />{/if}
+									{#if getShowState('priority')}<Check size={13} class="text-primary" />{/if}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
