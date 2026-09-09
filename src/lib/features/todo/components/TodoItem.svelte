@@ -21,6 +21,7 @@
 	import MetadataInput from '$lib/components/global/MetadataInput.svelte';
 	import { tick, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { clickOutside } from '$lib/utils';
 
 	let { todo }: { todo: Todo } = $props();
 
@@ -297,6 +298,7 @@
 	role="region"
 	aria-label="Todo item"
 	class="group/item relative w-full transition-all duration-200"
+	use:clickOutside={() => (isExpanded = false)}
 >
 	<Card.Root
 		class="relative overflow-hidden border transition-all duration-200

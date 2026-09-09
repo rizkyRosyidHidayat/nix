@@ -19,3 +19,26 @@ export interface ReturnType<T> {
 	state: ReturnState;
 	error?: string;
 }
+
+export function clickOutside(node: HTMLElement, callback: () => void) {
+	const handleClick = (event: MouseEvent) => {
+		// Check if the click happened outside the node and its children
+		if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
+			callback();
+		}
+	};
+
+	// Attach listener to the document
+	document.addEventListener('click', handleClick, true);
+
+	return {
+		update(newCallback: () => void) {
+			// Update callback reference if it changes dynamically
+			callback = newCallback;
+		},
+		destroy() {
+			// Clean up the event listener when the component unmounts
+			document.removeEventListener('click', handleClick, true);
+		}
+	};
+}
