@@ -1,6 +1,14 @@
-export type TodoInterval = 'everyday' | 'weekday' | 'weekend' | 'custom';
+export enum TodoInterval {
+  day = 'day',
+  weekday = 'weekday',
+  weekend = 'weekend'
+};
 
-export type TodoPriority = 'low' | 'medium' | 'high';
+export enum TodoPriority {
+  low = 'low',
+  medium = 'medium',
+  high = 'high'
+};
 
 export interface Todo {
   id: string;

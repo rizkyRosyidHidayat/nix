@@ -2,10 +2,12 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { ChevronDown } from '@lucide/svelte';
-	import { todoService } from '$lib/features/todo';
+	import { ChevronDown, Calendar, Clock, Repeat, Flag, FileText, Check } from '@lucide/svelte';
+	import { todoState } from '$lib/features/todo';
 	import { tick } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import MetadataInput from './MetadataInput.svelte';
+	import { globalState } from '$lib/stores/global.svelte';
 
 	const PREFIXES = {
 		notes: 'with note ',
@@ -32,14 +34,7 @@
 	let showRepeat = $state(false);
 	let showPriority = $state(false);
 
-	// Input element refs for focusing
-	let notesInput = $state<HTMLInputElement | null>(null);
-	let dateTimeInput = $state<HTMLInputElement | null>(null);
-	let deadlineInput = $state<HTMLInputElement | null>(null);
-	let repeatInput = $state<HTMLInputElement | null>(null);
-	let priorityInput = $state<HTMLInputElement | null>(null);
 	let titleInput = $state<HTMLInputElement | null>(null);
-
 	let metadata = $state<
 		{
 			field: FieldKey;
@@ -75,11 +70,12 @@
 				showNotes = !isCurrentlyShown;
 				if (!showNotes) {
 					metadata = metadata.filter((m) => m.field !== 'notes');
+					notesValue = '';
 				} else {
 					metadata.push({
 						field: 'notes',
 						value: notesValue,
-						input: notesInput,
+						input: null,
 						prefix: PREFIXES.notes,
 						placeHolder: 'input notes'
 					});
@@ -89,11 +85,12 @@
 				showDateTime = !isCurrentlyShown;
 				if (!showDateTime) {
 					metadata = metadata.filter((m) => m.field !== 'dateTime');
+					dateTimeValue = '';
 				} else {
 					metadata.push({
 						field: 'dateTime',
 						value: dateTimeValue,
-						input: dateTimeInput,
+						input: null,
 						prefix: PREFIXES.dateTime,
 						placeHolder: 'ex: tomorrow 3pm'
 					});
@@ -103,11 +100,12 @@
 				showDeadline = !isCurrentlyShown;
 				if (!showDeadline) {
 					metadata = metadata.filter((m) => m.field !== 'deadline');
+					deadlineValue = '';
 				} else {
 					metadata.push({
 						field: 'deadline',
 						value: deadlineValue,
-						input: deadlineInput,
+						input: null,
 						prefix: PREFIXES.deadline,
 						placeHolder: 'ex: tomorrow 3pm'
 					});
@@ -117,11 +115,12 @@
 				showRepeat = !isCurrentlyShown;
 				if (!showRepeat) {
 					metadata = metadata.filter((m) => m.field !== 'repeat');
+					repeatValue = '';
 				} else {
 					metadata.push({
 						field: 'repeat',
 						value: repeatValue,
-						input: repeatInput,
+						input: null,
 						prefix: PREFIXES.repeat,
 						placeHolder: 'day, weekday, or weekend'
 					});
@@ -131,11 +130,12 @@
 				showPriority = !isCurrentlyShown;
 				if (!showPriority) {
 					metadata = metadata.filter((m) => m.field !== 'priority');
+					priorityValue = '';
 				} else {
 					metadata.push({
 						field: 'priority',
 						value: priorityValue,
-						input: priorityInput,
+						input: null,
 						prefix: PREFIXES.priority,
 						placeHolder: 'ex: high, medium, or low'
 					});
@@ -181,21 +181,33 @@
 	}
 
 	function getInputRef(field: FieldKey): HTMLInputElement | null {
-		switch (field) {
-			case 'notes':
-				return notesInput;
-			case 'dateTime':
-				return dateTimeInput;
-			case 'deadline':
-				return deadlineInput;
-			case 'repeat':
-				return repeatInput;
-			case 'priority':
-				return priorityInput;
-		}
+		return metadata.find((m) => m.field === field)?.input ?? null;
 	}
 
 	function handleFieldInput(field: FieldKey, value: string) {
+		switch (field) {
+			case 'notes':
+				notesValue = value;
+				break;
+			case 'dateTime':
+				dateTimeValue = value;
+				break;
+			case 'deadline':
+				deadlineValue = value;
+				break;
+			case 'repeat':
+				repeatValue = value;
+				break;
+			case 'priority':
+				priorityValue = value;
+				break;
+		}
+
+		const item = metadata.find((m) => m.field === field);
+		if (item) {
+			item.value = value;
+		}
+
 		if (value === '') {
 			// User backspaced past prefix — auto-remove
 			switch (field) {
@@ -232,7 +244,30 @@
 	async function handleCreate() {
 		if (!hasTitle) return;
 
-		await todoService.createFromCommand({
+		// Ensure all metadata values are synced before creation
+		for (const item of metadata) {
+			switch (item.field) {
+				case 'notes':
+					notesValue = item.value;
+					break;
+				case 'dateTime':
+					dateTimeValue = item.value;
+					break;
+				case 'deadline':
+					deadlineValue = item.value;
+					break;
+				case 'repeat':
+					repeatValue = item.value;
+					break;
+				case 'priority':
+					priorityValue = item.value;
+					break;
+			}
+		}
+
+		const previousTodosCount = todoState.getTodos().length;
+
+		const result = await todoState.createFromCommand({
 			title: title.trim(),
 			notes: showNotes ? notesValue.trim() || undefined : undefined,
 			dateTime: showDateTime ? dateTimeValue.trim() || undefined : undefined,
@@ -240,6 +275,15 @@
 			repeat: showRepeat ? repeatValue.trim() || undefined : undefined,
 			priority: showPriority ? priorityValue.trim() || undefined : undefined
 		});
+
+		if (result.state === 'error' && result.error) {
+			toast.error(result.error);
+			return;
+		}
+
+		if (previousTodosCount === 0) {
+			globalState.setIsFirstAddTodo(true);
+		}
 
 		resetForm();
 	}
@@ -279,17 +323,17 @@
 						: 'w-full'}"
 				/>
 
-				{#each metadata as { field, prefix, placeHolder }, i (field)}
+				{#each metadata as item (item.field)}
 					<MetadataInput
-						show={getShowState(field)}
-						{field}
-						bind:value={metadata[i].value}
-						bind:input={metadata[i].input}
-						{prefix}
-						{placeHolder}
-						handleFieldInput={(value) => handleFieldInput(field, value)}
+						show={getShowState(item.field)}
+						field={item.field}
+						bind:value={item.value}
+						bind:input={item.input}
+						prefix={item.prefix}
+						placeHolder={item.placeHolder}
+						handleFieldInput={(value) => handleFieldInput(item.field, value)}
 						{handleCreate}
-						toggleField={() => toggleField(field)}
+						toggleField={() => toggleField(item.field)}
 					/>
 				{/each}
 
@@ -304,24 +348,34 @@
 							{/if}
 						{/snippet}
 					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
+					<DropdownMenu.Content align="start" class="w-40">
 						<DropdownMenu.Group>
-							<DropdownMenu.Label>Add Information</DropdownMenu.Label>
+							<DropdownMenu.Label class="text-xs font-semibold">Add Information</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							<DropdownMenu.Item onclick={() => toggleField('notes')}>
-								Notes {showNotes ? '✓' : ''}
+							<DropdownMenu.Item onclick={() => toggleField('notes')} class="gap-2 text-xs">
+								<FileText size={13} class="text-muted-foreground" />
+								<span class="flex-1">Notes</span>
+								{#if showNotes}<Check size={13} class="text-primary" />{/if}
 							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => toggleField('dateTime')}>
-								Date/Time {showDateTime ? '✓' : ''}
+							<DropdownMenu.Item onclick={() => toggleField('dateTime')} class="gap-2 text-xs">
+								<Calendar size={13} class="text-muted-foreground" />
+								<span class="flex-1">Date/Time</span>
+								{#if showDateTime}<Check size={13} class="text-primary" />{/if}
 							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => toggleField('deadline')}>
-								Deadline {showDeadline ? '✓' : ''}
+							<DropdownMenu.Item onclick={() => toggleField('deadline')} class="gap-2 text-xs">
+								<Clock size={13} class="text-muted-foreground" />
+								<span class="flex-1">Deadline</span>
+								{#if showDeadline}<Check size={13} class="text-primary" />{/if}
 							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => toggleField('repeat')}>
-								Repeat todo {showRepeat ? '✓' : ''}
+							<DropdownMenu.Item onclick={() => toggleField('repeat')} class="gap-2 text-xs">
+								<Repeat size={13} class="text-muted-foreground" />
+								<span class="flex-1">Repeat todo</span>
+								{#if showRepeat}<Check size={13} class="text-primary" />{/if}
 							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => toggleField('priority')}>
-								Priority {showPriority ? '✓' : ''}
+							<DropdownMenu.Item onclick={() => toggleField('priority')} class="gap-2 text-xs">
+								<Flag size={13} class="text-muted-foreground" />
+								<span class="flex-1">Priority</span>
+								{#if showPriority}<Check size={13} class="text-primary" />{/if}
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>

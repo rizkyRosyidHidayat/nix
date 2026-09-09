@@ -10,7 +10,9 @@
 		handleFieldInput,
 		handleCreate,
 		toggleField,
-		placeHolder
+		placeHolder,
+		onblur,
+		autofocus = false
 	}: {
 		show: boolean;
 		field: string;
@@ -21,10 +23,12 @@
 		handleFieldInput: (value: string) => void;
 		handleCreate: () => void;
 		toggleField: () => void;
+		onblur?: () => void;
+		autofocus?: boolean;
 	} = $props();
 
 	async function handleAutofocus() {
-		if (show && input) {
+		if (show && input && autofocus) {
 			await tick();
 			input.focus();
 		}
@@ -43,7 +47,11 @@
 		bind:this={input}
 		bind:value
 		placeholder={placeHolder}
-		oninput={() => handleFieldInput(value)}
+		oninput={(e) => {
+			value = e.currentTarget.value;
+			handleFieldInput(value);
+		}}
+		onblur={() => onblur?.()}
 		onkeydown={(e) => {
 			if (e.key === 'Backspace' && value.trim() === '') {
 				e.preventDefault();
@@ -51,6 +59,7 @@
 			}
 
 			if (e.key === 'Enter' && value.trim() !== '') {
+				e.preventDefault();
 				handleCreate();
 			}
 		}}

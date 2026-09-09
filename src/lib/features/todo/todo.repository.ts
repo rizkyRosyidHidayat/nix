@@ -1,11 +1,9 @@
 import type { Todo } from './todo.type';
 import { db } from '$lib/db/database';
-import { dbState } from '$lib/stores/db.svelte';
 
 export class TodoRepository {
   async create(todo: Todo): Promise<Todo> {
     await db.todos.add(todo);
-    dbState.notify('todo');
     return todo;
   }
 
@@ -14,7 +12,7 @@ export class TodoRepository {
   }
 
   async listByDate(date: string): Promise<Todo[]> {
-    return db.todos.where('startDate').equals(date).toArray();
+    return (await this.list()).filter((todo) => todo.startDate === date);
   }
 
   async getById(id: string): Promise<Todo | undefined> {
@@ -22,16 +20,20 @@ export class TodoRepository {
   }
 
   async update(id: string, changes: Partial<Todo>): Promise<Todo> {
-    await db.todos.update(id, changes);
-    dbState.notify('todo');
-    const updated = await this.getById(id);
-    if (!updated) throw new Error('Todo not found');
-    return updated;
+    const current = await this.getById(id);
+    if (!current) throw new Error('Todo not found');
+    const updatedTodo: Todo = { ...current, ...changes };
+    for (const key of Object.keys(changes) as (keyof Todo)[]) {
+      if (changes[key] === undefined) {
+        delete updatedTodo[key];
+      }
+    }
+    await db.todos.put(updatedTodo);
+    return updatedTodo;
   }
 
   async delete(id: string): Promise<void> {
     await db.todos.delete(id);
-    dbState.notify('todo');
   }
 }
 
