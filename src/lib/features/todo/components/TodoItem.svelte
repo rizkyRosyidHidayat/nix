@@ -23,7 +23,7 @@
 	import { toast } from 'svelte-sonner';
 	import { clickOutside } from '$lib/utils';
 
-	let { todo }: { todo: Todo } = $props();
+	let { todo, isExpanded = $bindable() }: { todo: Todo; isExpanded?: boolean } = $props();
 
 	const PREFIXES = {
 		notes: 'with note ',
@@ -99,7 +99,6 @@
 	}
 
 	// Card interaction state
-	let isExpanded = $state(false);
 	let isSaving = $state(false);
 	let isEditingTitle = $state(false);
 
