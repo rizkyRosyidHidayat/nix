@@ -3,68 +3,83 @@ import * as chrono from 'chrono-node';
 import type { Todo, TodoCreateDto, TodoUpdateDto } from './todo.type';
 import { TodoPriority, TodoInterval } from './todo.type';
 import { todoRepository, type TodoRepository } from './todo.repository';
-import type { ReturnState, ReturnType } from '$lib/utils';
+import type { ReturnType } from '$lib/utils';
 import { SvelteDate } from 'svelte/reactivity';
 
 export class TodoState {
   private repository: TodoRepository;
-  private isLoading = $state<boolean>(true);
-  private state = $state<ReturnState>('pending');
-  private dataList = $state<Todo[]>([]);
-  private dataDetail = $state<Todo | undefined>(undefined);
-  private error = $state<string | undefined>(undefined);
+  public todos: ReturnType<Todo[]> = $state({
+    isLoading: true,
+    data: [],
+    state: 'pending'
+  });
+  public upcomingTodos: ReturnType<Todo[]> = $state({
+    isLoading: true,
+    data: [],
+    state: 'pending'
+  });
+  public todo: ReturnType<Todo | undefined> = $state({
+    isLoading: false,
+    data: undefined,
+    state: 'pending'
+  });
+  public deleteMutation: ReturnType<void> = $state({
+    isLoading: false,
+    data: undefined,
+    state: 'pending'
+  });
+  public createMutation: ReturnType<Todo | undefined> = $state({
+    isLoading: false,
+    data: undefined,
+    state: 'pending'
+  });
+  public updateMutation: ReturnType<Todo | undefined> = $state({
+    isLoading: false,
+    data: undefined,
+    state: 'pending'
+  });
 
   constructor(repository: TodoRepository = todoRepository) {
     this.repository = repository;
     if (browser) {
-      this.list();
+      this.refresh();
     }
   }
 
-  private checkDateTime(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
+  private checkDateTime(raw: string | undefined): ReturnType<undefined> | undefined {
     if (raw && !this.parseDateTime(raw).date) {
-      return Promise.resolve({
+      return {
         isLoading: false,
         state: 'error',
         data: undefined,
         error: `Date invalid, try format DD/MM/YYYY`
-      });
-    }
-    if (raw && !this.parseDateTime(raw).time) {
-      return Promise.resolve({
-        isLoading: false,
-        state: 'error',
-        data: undefined,
-        error: `Time invalid, try format HH:MM or AM/PM`
-      });
+      };
     }
   }
 
-  private checkPriority(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
-    const priority = raw
-      ? (raw.trim().toLowerCase() as unknown as TodoPriority)
-      : undefined;
-    if (priority && !Object.values(TodoPriority).includes(priority)) {
-      return Promise.resolve({
+  private checkPriority(raw: string | undefined): ReturnType<undefined> | undefined {
+    if (!raw) return undefined;
+    const priority = raw.trim().toLowerCase() as TodoPriority;
+    if (!Object.values(TodoPriority).includes(priority)) {
+      return {
         isLoading: false,
         state: 'error',
         data: undefined,
         error: `Priority must be one of: ${Object.values(TodoPriority).join(', ')}`
-      });
+      };
     }
   }
 
-  private checkInterval(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
-    const interval = raw
-      ? (raw.trim().toLowerCase() as unknown as TodoInterval)
-      : undefined;
-    if (interval && !Object.values(TodoInterval).includes(interval)) {
-      return Promise.resolve({
+  private checkInterval(raw: string | undefined): ReturnType<undefined> | undefined {
+    if (!raw) return undefined;
+    const interval = raw.trim().toLowerCase() as TodoInterval;
+    if (!Object.values(TodoInterval).includes(interval)) {
+      return {
         isLoading: false,
         state: 'error',
         data: undefined,
         error: `Interval must be one of: ${Object.values(TodoInterval).join(', ')}`
-      });
+      };
     }
   }
 
@@ -81,6 +96,10 @@ export class TodoState {
       ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
       : undefined;
     return { date, time };
+  }
+
+  public async refresh(): Promise<void> {
+    await Promise.all([this.list(), this.listUpcomingTodos()]);
   }
 
   async createFromCommand(raw: {
@@ -110,8 +129,8 @@ export class TodoState {
       startTime,
       dueDate,
       endTime,
-      interval: raw.repeat?.trim().toLowerCase() as unknown as TodoInterval,
-      priority: raw.priority?.trim().toLowerCase() as unknown as TodoPriority,
+      interval: raw.repeat ? (raw.repeat.trim().toLowerCase() as unknown as TodoInterval) : undefined,
+      priority: raw.priority ? (raw.priority.trim().toLowerCase() as unknown as TodoPriority) : undefined,
     });
   }
 
@@ -133,18 +152,8 @@ export class TodoState {
     if (dateTimeCheck) return dateTimeCheck;
     const deadlineCheck = this.checkDateTime(raw.deadline);
     if (deadlineCheck) return deadlineCheck;
-
-    const interval = raw.repeat
-      ? (raw.repeat.trim().toLowerCase() as unknown as TodoInterval)
-      : undefined;
-
     const intervalCheck = this.checkInterval(raw.repeat);
     if (intervalCheck) return intervalCheck;
-
-    const priority = raw.priority
-      ? (raw.priority.trim().toLowerCase() as unknown as TodoPriority)
-      : undefined;
-
     const priorityCheck = this.checkPriority(raw.priority);
     if (priorityCheck) return priorityCheck;
 
@@ -155,13 +164,14 @@ export class TodoState {
       startTime,
       dueDate,
       endTime,
-      interval,
-      priority,
+      interval: raw.repeat ? (raw.repeat.trim().toLowerCase() as unknown as TodoInterval) : undefined,
+      priority: raw.priority ? (raw.priority.trim().toLowerCase() as unknown as TodoPriority) : undefined,
       updatedAt: new SvelteDate().toISOString()
     });
   }
 
   async create(dto: TodoCreateDto): Promise<ReturnType<Todo | undefined>> {
+    this.createMutation.isLoading = true;
     const todo: Todo = {
       id: crypto.randomUUID(),
       title: dto.title,
@@ -176,141 +186,206 @@ export class TodoState {
       notes: dto.notes,
       priority: dto.priority,
     };
-
-    this.dataDetail = await this.repository.create(todo);
-
-    await this.list();
-
-    return {
-      isLoading: false,
-      state: 'success',
-      data: this.dataDetail
-    };
+    try {
+      const created = await this.repository.create(todo);
+      await this.refresh();
+      this.createMutation = {
+        isLoading: false,
+        state: 'success',
+        data: created,
+      };
+      return this.createMutation;
+    } catch (error) {
+      this.createMutation = {
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: error instanceof Error ? error.message : String(error)
+      };
+      return this.createMutation;
+    }
   }
 
-  async update(id: string, dto: TodoUpdateDto): Promise<ReturnType<Todo>> {
-    const updated = await this.repository.update(id, dto);
-
-    this.dataList = this.dataList.map((todo) => {
-      if (todo.id === id) {
-        return updated;
-      }
-      return todo;
-    });
-
-    if (this.dataDetail?.id === id) {
-      this.dataDetail = updated;
+  async update(id: string, dto: TodoUpdateDto): Promise<ReturnType<Todo | undefined>> {
+    this.updateMutation.isLoading = true;
+    try {
+      const updated = await this.repository.update(id, dto);
+      await this.refresh();
+      this.updateMutation = {
+        isLoading: false,
+        state: 'success',
+        data: updated,
+      };
+      this.todo = {
+        isLoading: false,
+        state: 'success',
+        data: updated
+      };
+      return this.updateMutation;
+    } catch (error) {
+      this.updateMutation = {
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: error instanceof Error ? error.message : String(error)
+      };
+      return this.updateMutation;
     }
-
-    return {
-      isLoading: false,
-      state: 'success',
-      data: updated
-    };
   }
 
   async list(): Promise<ReturnType<Todo[]>> {
-    this.dataList = await new Promise<Todo[]>((resolve) =>
-      setTimeout(async () => {
-        const todoList = (await this.repository.list()).sort((a, b) => {
-          if (a.dueDate && b.dueDate) {
-            return new SvelteDate(a.dueDate).getTime() - new SvelteDate(b.dueDate).getTime();
-          }
-          if (a.dueDate) return -1;
-          if (b.dueDate) return 1;
-          return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
-        });
-        resolve(todoList);
-      }, 500)
-    );
-    this.isLoading = false;
+    this.todos.isLoading = true;
+    try {
+      const items = await this.repository.list();
+      const sorted = items.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new SvelteDate(a.dueDate).getTime() - new SvelteDate(b.dueDate).getTime();
+        }
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
+      });
+      this.todos = {
+        isLoading: false,
+        state: 'success',
+        data: sorted
+      };
+      return this.todos;
+    } catch (err) {
+      this.todos = {
+        isLoading: false,
+        state: 'error',
+        data: this.todos.data ?? [],
+        error: err instanceof Error ? err.message : String(err)
+      };
+      return this.todos;
+    }
+  }
 
-    return {
-      isLoading: this.isLoading,
-      state: 'success',
-      data: this.dataList
-    };
+  async listUpcomingTodos(): Promise<ReturnType<Todo[]>> {
+    this.upcomingTodos.isLoading = true;
+    try {
+      const items = await this.repository.list();
+      const sorted = items.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new SvelteDate(a.dueDate).getTime() - new SvelteDate(b.dueDate).getTime();
+        }
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
+      });
+
+      // filter upcoming todo by isComplete, created at/stardate and due date today
+      const today = new SvelteDate(new SvelteDate().toISOString().split('T')[0]).getTime();
+      const filtered = sorted.filter((todo) => {
+        const createdAt = new SvelteDate(todo.createdAt.split('T')[0]).getTime();
+        const startDate = todo.startDate ? new SvelteDate(todo.startDate).getTime() : 0;
+        const dueDate = todo.dueDate ? new SvelteDate(todo.dueDate).getTime() : 0;
+        return (
+          !todo.isCompleted &&
+          (createdAt === today || startDate === today || dueDate === today)
+        );
+      });
+
+      this.upcomingTodos = {
+        isLoading: false,
+        state: 'success',
+        data: filtered
+      };
+      return this.upcomingTodos;
+    } catch (err) {
+      this.upcomingTodos = {
+        isLoading: false,
+        state: 'error',
+        data: this.upcomingTodos.data ?? [],
+        error: err instanceof Error ? err.message : String(err)
+      };
+      return this.upcomingTodos;
+    }
   }
 
   async listByDate(date: string): Promise<ReturnType<Todo[]>> {
-    this.dataList = await new Promise<Todo[]>((resolve) =>
-      setTimeout(async () => {
-        const todoList = (await this.list()).data.filter((todo) => todo.startDate === date);
-        resolve(todoList);
-      }, 500)
-    );
-
-    return {
-      isLoading: this.isLoading,
-      state: 'success',
-      data: this.dataList
-    };
+    try {
+      const items = await this.repository.listByDate(date);
+      return {
+        isLoading: false,
+        state: 'success',
+        data: items
+      };
+    } catch (err) {
+      return {
+        isLoading: false,
+        state: 'error',
+        data: [],
+        error: err instanceof Error ? err.message : String(err)
+      };
+    }
   }
 
-  async detail(id: string): Promise<ReturnType<Todo | undefined>> {
-    this.dataDetail = await new Promise<Todo | undefined>((resolve) =>
-      setTimeout(async () => {
-        const todo = await this.repository.getById(id);
-        resolve(todo);
-      }, 500)
-    );
-    this.isLoading = false;
+  async detail(id?: string): Promise<ReturnType<Todo | undefined>> {
+    if (!id) {
+      this.todo = {
+        isLoading: false,
+        state: 'success',
+        data: undefined
+      };
+      return this.todo;
+    }
 
-    return {
-      isLoading: this.isLoading,
-      state: 'success',
-      data: this.dataDetail
-    };
+    this.todo.isLoading = true;
+    try {
+      const item = await this.repository.getById(id);
+      this.todo = {
+        isLoading: false,
+        state: 'success',
+        data: item
+      };
+      return this.todo;
+    } catch (err) {
+      this.todo = {
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: err instanceof Error ? err.message : String(err)
+      };
+      return this.todo;
+    }
   }
 
-  async complete(id: string): Promise<ReturnType<Todo>> {
-    const updated = await this.update(id, {
+  async complete(id: string): Promise<ReturnType<Todo | undefined>> {
+    return this.update(id, {
       isCompleted: true,
       completedAt: new SvelteDate().toISOString()
     });
-
-    return updated;
   }
 
-  async incomplete(id: string): Promise<ReturnType<Todo>> {
-    const updated = await this.update(id, {
+  async incomplete(id: string): Promise<ReturnType<Todo | undefined>> {
+    return this.update(id, {
       isCompleted: false,
       completedAt: undefined
     });
-
-    return updated;
   }
 
   async delete(id: string): Promise<ReturnType<void>> {
-    await this.repository.delete(id);
-    this.dataList = this.dataList.filter((todo) => todo.id !== id);
-    this.dataDetail = this.dataDetail?.id === id ? undefined : this.dataDetail;
+    this.deleteMutation.isLoading = true;
+    try {
+      await this.repository.delete(id);
+      await this.refresh();
+    } catch (err) {
+      this.deleteMutation = {
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: err instanceof Error ? err.message : String(err)
+      };
+      return this.deleteMutation;
+    }
 
     return {
       isLoading: false,
       state: 'success',
       data: undefined
     };
-  }
-
-  getTodos() {
-    return this.dataList;
-  }
-
-  getTodo() {
-    return this.dataDetail;
-  }
-
-  getIsLoading() {
-    return this.isLoading;
-  }
-
-  getState() {
-    return this.state;
-  }
-
-  getError() {
-    return this.error;
   }
 }
 

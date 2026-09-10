@@ -244,18 +244,18 @@
 		}
 	}
 
-	function handleCheck(e?: MouseEvent) {
+	async function handleCheck(e?: MouseEvent) {
 		e?.stopPropagation();
 		if (!todo.isCompleted) {
-			todoState.complete(todo.id);
+			await todoState.complete(todo.id);
 		} else {
-			todoState.incomplete(todo.id);
+			await todoState.incomplete(todo.id);
 		}
 	}
 
-	function handleDelete(e?: MouseEvent) {
+	async function handleDelete(e?: MouseEvent) {
 		e?.stopPropagation();
-		todoState.delete(todo.id);
+		await todoState.delete(todo.id);
 	}
 
 	async function handleCardClick(e: MouseEvent) {

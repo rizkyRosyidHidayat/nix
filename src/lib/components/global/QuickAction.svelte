@@ -273,8 +273,6 @@
 			}
 		}
 
-		const previousTodosCount = todoState.getTodos().length;
-
 		const result = await todoState.createFromCommand({
 			title: title.trim(),
 			notes: showNotes ? notesValue.trim() || undefined : undefined,
@@ -289,7 +287,7 @@
 			return;
 		}
 
-		if (previousTodosCount === 0) {
+		if (todoState.upcomingTodos.data.length === 1 || todoState.todos.data.length === 1) {
 			globalState.setIsFirstAddTodo(true);
 		}
 

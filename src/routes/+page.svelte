@@ -6,46 +6,47 @@
 	import TodoItem from '$lib/features/todo/components/TodoItem.svelte';
 
 	const MAX_VISIBLE = 3;
-
-	let pendingToday = $derived(
-		todoState
-			.getTodos()
-			.filter((todo) => todo.createdAt.split('T')[0] === new Date().toISOString().split('T')[0])
-			.slice(0, MAX_VISIBLE)
-	);
-
-	$effect(() => {
-		todoState.list();
-
-		if (globalState.getIsFirstAddTodo()) {
-			setTimeout(() => {
-				globalState.setIsFirstAddTodo(false);
-			}, 3000);
-		}
-	});
-
-	let isHovering = $state(false);
 	let expandedItems = $state<Record<string, boolean>>({});
+	let isHovering = $state(false);
 	let isAnyExpanded = $derived(Object.values(expandedItems).some(Boolean));
 	let isListHovered = $derived(isHovering || isAnyExpanded);
 
-	let hiddenCount = $derived(Math.max(0, todoState.getTodos().length - MAX_VISIBLE));
-	let hasHidden = $derived(todoState.getTodos().length > MAX_VISIBLE);
+	let todos = $derived(todoState.upcomingTodos.data);
+	let isLoading = $derived(todoState.upcomingTodos.isLoading);
+	let isLoadingDeleteMutation = $derived(todoState.deleteMutation.isLoading);
+	let isLoadingUpdateMutation = $derived(todoState.updateMutation.isLoading);
+	let isLoadingCreateMutation = $derived(todoState.createMutation.isLoading);
+
+	let isLoadingMutations = $derived(
+		isLoadingDeleteMutation || isLoadingUpdateMutation || isLoadingCreateMutation
+	);
+
+	$effect(() => {
+		if (globalState.getIsFirstAddTodo()) {
+			const timer = setTimeout(() => {
+				globalState.setIsFirstAddTodo(false);
+			}, 2000);
+			return () => clearTimeout(timer);
+		}
+	});
+
+	let hiddenCount = $derived(Math.max(0, todos.length - MAX_VISIBLE));
+	let hasHidden = $derived(todos.length > MAX_VISIBLE);
 
 	let itemHeights = $state<number[]>([]);
 </script>
 
-{#if todoState.getIsLoading()}
+{#if isLoading && !isLoadingMutations}
 	<Container>
 		<h1 class="text-center text-xl leading-relaxed text-muted-foreground">Loading...</h1>
 	</Container>
-{:else if todoState.getTodos().length === 0}
+{:else if todos.length === 0}
 	<Container>
 		<h1 class="mb-4 text-center text-3xl font-bold">Hello, let's add your first todo</h1>
 		<QuickAction />
 		<p class="text-center text-xs text-muted-foreground">Nix is an application for managing todo</p>
 	</Container>
-{:else if todoState.getTodos().length === 1 && globalState.getIsFirstAddTodo()}
+{:else if todos.length === 1 && globalState.getIsFirstAddTodo()}
 	<Container>
 		<h1 class="text-center text-3xl font-bold">Great, start the journey now</h1>
 	</Container>
@@ -62,7 +63,7 @@
 		>
 			<!-- Sonner-style stacked list -->
 			<div class="relative transition-all duration-300">
-				{#each pendingToday as todo, idx (todo.id)}
+				{#each todos as todo, idx (todo.id)}
 					<div
 						class="w-full transition-all duration-300 ease-out"
 						bind:clientHeight={itemHeights[idx]}
@@ -88,7 +89,7 @@
 			</div>
 
 			<!-- View all / show less toggle -->
-			{#if hasHidden}
+			{#if hasHidden && !isListHovered}
 				<div
 					class="flex justify-center transition-all duration-300 {isListHovered ? 'mt-4' : 'mt-10'}"
 				>
