@@ -259,6 +259,7 @@
 	}
 
 	async function handleCardClick(e: MouseEvent) {
+		e.stopPropagation();
 		const target = e.target as HTMLElement | null;
 		// Don't toggle if user clicked on button, dropdown, input, or interactive controls
 		if (
@@ -285,13 +286,6 @@
 			await handleSave();
 		}
 	}
-
-	// Priority badge formatting
-	const priorityBadgeColors: Record<string, string> = {
-		high: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-		medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-		low: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-	};
 </script>
 
 <div
@@ -351,59 +345,6 @@
 						? 'text-muted-foreground line-through'
 						: 'text-foreground'}"
 				/>
-
-				<!-- Collapsed preview pills (shown when collapsed and metadata exists) -->
-				{#if !isExpanded && (todo.priority || todo.dueDate || todo.endTime || todo.startDate || todo.startTime || todo.interval || todo.notes)}
-					<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-						{#if todo.priority}
-							<span
-								class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium tracking-wider uppercase {priorityBadgeColors[
-									todo.priority.toLowerCase()
-								] ?? 'bg-muted text-muted-foreground'}"
-							>
-								<Flag size={10} />
-								{todo.priority}
-							</span>
-						{/if}
-
-						{#if todo.startDate || todo.startTime}
-							<span
-								class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/60 px-1.5 py-0.5 text-[11px] text-muted-foreground"
-							>
-								<Calendar size={11} />
-								{formatDateTime(todo.startDate, todo.startTime)}
-							</span>
-						{/if}
-
-						{#if todo.dueDate || todo.endTime}
-							<span
-								class="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[11px] text-amber-700 dark:text-amber-400"
-							>
-								<Clock size={11} />
-								{formatDateTime(todo.dueDate, todo.endTime)}
-							</span>
-						{/if}
-
-						{#if todo.interval}
-							<span
-								class="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary"
-							>
-								<Repeat size={11} />
-								{todo.interval}
-							</span>
-						{/if}
-
-						{#if todo.notes}
-							<span
-								class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/60 px-1.5 py-0.5 text-[11px] text-muted-foreground"
-								title={todo.notes}
-							>
-								<FileText size={11} />
-								note
-							</span>
-						{/if}
-					</div>
-				{/if}
 			</div>
 
 			<!-- Right quick actions -->
@@ -423,12 +364,16 @@
 					variant="ghost"
 					onclick={toggleExpand}
 					title={isExpanded ? 'Collapse' : 'Expand details'}
-					class="shrink-0 text-muted-foreground transition-transform duration-200 hover:text-foreground"
+					class="relative shrink-0 text-muted-foreground transition-transform duration-200 hover:text-foreground"
 				>
 					<ChevronDown
 						size={16}
 						class="transition-transform duration-200 {isExpanded ? 'rotate-180 text-primary' : ''}"
 					/>
+					{#if !isExpanded && (todo.priority || todo.dueDate || todo.endTime || todo.startDate || todo.startTime || todo.interval || todo.notes)}
+						<span class="absolute top-0 right-0 inline-block size-1.5 rounded-full bg-destructive"
+						></span>
+					{/if}
 				</Button>
 			</div>
 		</div>

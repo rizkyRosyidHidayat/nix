@@ -14,8 +14,7 @@
 		},
 		{
 			icon: CheckSquare,
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			onClick: () => goto(resolve('/todo' as any)),
+			onClick: () => goto(resolve('/todo')),
 			domain: '/todo'
 		},
 		{
@@ -53,11 +52,11 @@
 	></div>
 {/if}
 
-<div class="sticky bottom-4 z-10 mx-auto flex w-full max-w-2xl justify-center gap-4">
+<div class="sticky bottom-4 z-10 mx-auto flex w-full max-w-2xl justify-center gap-4 pt-4">
 	<div
 		role="navigation"
 		aria-label="Main Navigation"
-		class="flex rounded-3xl border"
+		class="flex rounded-3xl border bg-card"
 		onmouseenter={() => (isHovered = true)}
 		onmouseleave={() => (isHovered = false)}
 	>

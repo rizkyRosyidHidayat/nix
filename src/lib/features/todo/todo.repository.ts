@@ -25,13 +25,18 @@ export class TodoRepository {
   }
 
   async listByDate(date: string): Promise<Todo[]> {
-    // filter by start date or created date, ascending
+    // filter by start date, due date, or created date
     return db.todos
       .filter((todo) => {
         const filterDate = new Date(date).getTime();
         const startDate = todo.startDate ? new Date(todo.startDate).getTime() : 0;
+        const dueDate = todo.dueDate ? new Date(todo.dueDate).getTime() : 0;
         const createdDate = new Date(todo.createdAt.split('T')[0]).getTime();
-        return startDate === filterDate || createdDate === filterDate;
+        return dueDate
+          ? dueDate === filterDate
+          : startDate
+            ? startDate === filterDate
+            : createdDate === filterDate;
       })
       .reverse()
       .toArray();

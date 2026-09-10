@@ -8,12 +8,18 @@ import { SvelteDate } from 'svelte/reactivity';
 
 export class TodoState {
   private repository: TodoRepository;
+  public selectedDate: string = new SvelteDate().toISOString().split('T')[0];
   public todos: ReturnType<Todo[]> = $state({
     isLoading: true,
     data: [],
     state: 'pending'
   });
   public upcomingTodos: ReturnType<Todo[]> = $state({
+    isLoading: true,
+    data: [],
+    state: 'pending'
+  });
+  public todosByDate: ReturnType<Todo[]> = $state({
     isLoading: true,
     data: [],
     state: 'pending'
@@ -99,7 +105,11 @@ export class TodoState {
   }
 
   public async refresh(): Promise<void> {
-    await Promise.all([this.list(), this.listUpcomingTodos()]);
+    await Promise.all([
+      this.list(),
+      this.listUpcomingTodos(),
+      this.listByDate(this.selectedDate)
+    ]);
   }
 
   async createFromCommand(raw: {
@@ -276,20 +286,25 @@ export class TodoState {
   }
 
   async listByDate(date: string): Promise<ReturnType<Todo[]>> {
+    this.selectedDate = date;
+    this.todosByDate.isLoading = true;
     try {
       const items = await this.repository.listByDate(date);
-      return {
+
+      this.todosByDate = {
         isLoading: false,
         state: 'success',
         data: items
       };
+      return this.todosByDate;
     } catch (err) {
-      return {
+      this.todosByDate = {
         isLoading: false,
         state: 'error',
-        data: [],
+        data: this.todosByDate.data ?? [],
         error: err instanceof Error ? err.message : String(err)
       };
+      return this.todosByDate;
     }
   }
 
