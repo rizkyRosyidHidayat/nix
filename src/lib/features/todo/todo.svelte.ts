@@ -237,18 +237,10 @@ export class TodoState {
     this.todos.isLoading = true;
     try {
       const items = await this.repository.list();
-      const sorted = items.sort((a, b) => {
-        if (a.dueDate && b.dueDate) {
-          return new SvelteDate(a.dueDate).getTime() - new SvelteDate(b.dueDate).getTime();
-        }
-        if (a.dueDate) return -1;
-        if (b.dueDate) return 1;
-        return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
-      });
       this.todos = {
         isLoading: false,
         state: 'success',
-        data: sorted
+        data: items
       };
       return this.todos;
     } catch (err) {
@@ -265,32 +257,11 @@ export class TodoState {
   async listUpcomingTodos(): Promise<ReturnType<Todo[]>> {
     this.upcomingTodos.isLoading = true;
     try {
-      const items = await this.repository.list();
-      const sorted = items.sort((a, b) => {
-        if (a.dueDate && b.dueDate) {
-          return new SvelteDate(a.dueDate).getTime() - new SvelteDate(b.dueDate).getTime();
-        }
-        if (a.dueDate) return -1;
-        if (b.dueDate) return 1;
-        return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
-      });
-
-      // filter upcoming todo by isComplete, created at/stardate and due date today
-      const today = new SvelteDate(new SvelteDate().toISOString().split('T')[0]).getTime();
-      const filtered = sorted.filter((todo) => {
-        const createdAt = new SvelteDate(todo.createdAt.split('T')[0]).getTime();
-        const startDate = todo.startDate ? new SvelteDate(todo.startDate).getTime() : 0;
-        const dueDate = todo.dueDate ? new SvelteDate(todo.dueDate).getTime() : 0;
-        return (
-          !todo.isCompleted &&
-          (createdAt === today || startDate === today || dueDate === today)
-        );
-      });
-
+      const items = await this.repository.listUpcomingTodos();
       this.upcomingTodos = {
         isLoading: false,
         state: 'success',
-        data: filtered
+        data: items
       };
       return this.upcomingTodos;
     } catch (err) {
