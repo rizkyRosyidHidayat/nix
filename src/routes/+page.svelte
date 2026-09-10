@@ -4,6 +4,9 @@
 	import { todoState } from '$lib/features/todo';
 	import { globalState } from '$lib/stores/global.svelte';
 	import TodoItem from '$lib/features/todo/components/TodoItem.svelte';
+	import { fly, fade } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
 
 	const MAX_VISIBLE = 3;
 	let expandedItems = $state<Record<string, boolean>>({});
@@ -67,23 +70,29 @@
 					<div
 						class="w-full transition-all duration-300 ease-out"
 						bind:clientHeight={itemHeights[idx]}
+						animate:flip={{ duration: 300, easing: cubicOut }}
+						out:fade={{ duration: 250, easing: cubicOut }}
 						style="
 							{!isListHovered && idx > 0
 							? `margin-top: -${itemHeights[idx - 1] || 72}px;
 							   transform: translateY(${idx * 15}px) scale(${1 - idx * 0.04});
-							   opacity: 1;
 							   z-index: ${MAX_VISIBLE - idx};
 							   pointer-events: none;`
 							: `margin-top: ${idx > 0 ? '16px' : '0'};
 							   transform: translateY(0) scale(1);
-							   opacity: 1;
 							   z-index: ${MAX_VISIBLE + 1};
 							   pointer-events: auto;`}
 							position: relative;
 							transform-origin: top center;
 						"
 					>
-						<TodoItem {todo} bind:isExpanded={expandedItems[todo.id]} />
+						<div
+							out:fly={{ x: 40, duration: 250, easing: cubicOut }}
+							in:fade={{ duration: 200 }}
+							class="w-full"
+						>
+							<TodoItem {todo} bind:isExpanded={expandedItems[todo.id]} />
+						</div>
 					</div>
 				{/each}
 			</div>
