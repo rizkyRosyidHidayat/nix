@@ -163,7 +163,7 @@
 </script>
 
 <svelte:head>
-	<title>Discovery All Todos | Nix</title>
+	<title>Discover All Todos | Nix</title>
 	<meta
 		name="description"
 		content="Explore and organize all your todos by date with an interactive weekly calendar."
@@ -172,7 +172,7 @@
 
 <Container class="max-w-md">
 	<!-- Page Header -->
-	<h1 class="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">Discovery all todo list</h1>
+	<h1 class="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">Discover all todo list</h1>
 
 	<!-- Weekly Date Carousel Card -->
 	<div class="w-full">
