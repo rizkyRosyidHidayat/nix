@@ -36,7 +36,10 @@
 	let hiddenCount = $derived(Math.max(0, todos.length - MAX_VISIBLE));
 	let hasHidden = $derived(todos.length > MAX_VISIBLE);
 
-	let itemHeights = $state<number[]>([]);
+	let markerCount = $derived(
+		!isListHovered ? Math.min(Math.max(0, todos.length - 1), MAX_VISIBLE - 1) : 0
+	);
+	let stackOffset = $derived(markerCount * 14);
 </script>
 
 {#if isLoading && !isLoadingMutations}
@@ -65,31 +68,53 @@
 			onmouseleave={() => (isHovering = false)}
 		>
 			<!-- Sonner-style stacked list -->
-			<div class="relative transition-all duration-300">
+			<div
+				class="relative transition-all duration-300 ease-out"
+				style="margin-bottom: {stackOffset}px;"
+			>
 				{#each todos as todo, idx (todo.id)}
 					<div
 						class="w-full transition-all duration-300 ease-out"
-						bind:clientHeight={itemHeights[idx]}
 						animate:flip={{ duration: 300, easing: cubicOut }}
 						out:fade={{ duration: 250, easing: cubicOut }}
 						style="
 							{!isListHovered && idx > 0
-							? `margin-top: -${itemHeights[idx - 1] || 72}px;
-							   transform: translateY(${idx * 15}px) scale(${1 - idx * 0.04});
-							   z-index: ${MAX_VISIBLE - idx};
-							   pointer-events: none;`
+							? `height: 0px;
+							   margin: 0px;
+							   opacity: 0;
+							   overflow: hidden;
+							   pointer-events: none;
+							   transform: translateY(0) scale(0.96);`
 							: `margin-top: ${idx > 0 ? '16px' : '0'};
-							   transform: translateY(0) scale(1);
-							   z-index: ${MAX_VISIBLE + 1};
-							   pointer-events: auto;`}
+							   height: auto;
+							   opacity: 1;
+							   overflow: visible;
+							   pointer-events: auto;
+							   transform: translateY(0) scale(1);`}
 							position: relative;
 							transform-origin: top center;
 						"
 					>
+						<!-- Substitute marker cards behind the leading card when stacked -->
+						{#if idx === 0 && !isListHovered && markerCount > 0}
+							{#each Array.from({ length: markerCount }, (_, index) => index) as i (i)}
+								{@const layer = i + 1}
+								<div
+									class="pointer-events-none absolute inset-0 rounded-[min(var(--radius-4xl),24px)] border border-border/70 bg-card shadow-sm transition-all duration-300 ease-out"
+									style="
+										transform: translateY({layer * 14}px) scale({1 - layer * 0.04});
+										transform-origin: top center;
+										z-index: {-layer};
+										opacity: {1 - layer * 0.15};
+									"
+								></div>
+							{/each}
+						{/if}
+
 						<div
 							out:fly={{ x: 40, duration: 250, easing: cubicOut }}
 							in:fade={{ duration: 200 }}
-							class="w-full"
+							class="relative z-10 w-full"
 						>
 							<TodoItem {todo} bind:isExpanded={expandedItems[todo.id]} />
 						</div>
