@@ -21,6 +21,53 @@ export class TodoState {
     }
   }
 
+  private checkDateTime(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
+    if (raw && !this.parseDateTime(raw).date) {
+      return Promise.resolve({
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: `Date invalid, try format DD/MM/YYYY`
+      });
+    }
+    if (raw && !this.parseDateTime(raw).time) {
+      return Promise.resolve({
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: `Time invalid, try format HH:MM or AM/PM`
+      });
+    }
+  }
+
+  private checkPriority(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
+    const priority = raw
+      ? (raw.trim().toLowerCase() as unknown as TodoPriority)
+      : undefined;
+    if (priority && !Object.values(TodoPriority).includes(priority)) {
+      return Promise.resolve({
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: `Priority must be one of: ${Object.values(TodoPriority).join(', ')}`
+      });
+    }
+  }
+
+  private checkInterval(raw: string | undefined): Promise<ReturnType<Todo | undefined>> | undefined {
+    const interval = raw
+      ? (raw.trim().toLowerCase() as unknown as TodoInterval)
+      : undefined;
+    if (interval && !Object.values(TodoInterval).includes(interval)) {
+      return Promise.resolve({
+        isLoading: false,
+        state: 'error',
+        data: undefined,
+        error: `Interval must be one of: ${Object.values(TodoInterval).join(', ')}`
+      });
+    }
+  }
+
   private parseDateTime(raw: string | undefined): { date?: string; time?: string } {
     if (!raw) return {};
     const parsed = chrono.parseDate(raw);
@@ -47,6 +94,15 @@ export class TodoState {
     const { date: startDate, time: startTime } = this.parseDateTime(raw.dateTime);
     const { date: dueDate, time: endTime } = this.parseDateTime(raw.deadline);
 
+    const dateTimeCheck = this.checkDateTime(raw.dateTime);
+    if (dateTimeCheck) return dateTimeCheck;
+    const deadlineCheck = this.checkDateTime(raw.deadline);
+    if (deadlineCheck) return deadlineCheck;
+    const intervalCheck = this.checkInterval(raw.repeat);
+    if (intervalCheck) return intervalCheck;
+    const priorityCheck = this.checkPriority(raw.priority);
+    if (priorityCheck) return priorityCheck;
+
     return this.create({
       title: raw.title.trim(),
       notes: raw.notes || undefined,
@@ -69,35 +125,28 @@ export class TodoState {
       repeat?: string;
       priority?: string;
     }
-  ): Promise<ReturnType<Todo>> {
+  ): Promise<ReturnType<Todo | undefined>> {
     const { date: startDate, time: startTime } = this.parseDateTime(raw.dateTime);
     const { date: dueDate, time: endTime } = this.parseDateTime(raw.deadline);
+
+    const dateTimeCheck = this.checkDateTime(raw.dateTime);
+    if (dateTimeCheck) return dateTimeCheck;
+    const deadlineCheck = this.checkDateTime(raw.deadline);
+    if (deadlineCheck) return deadlineCheck;
 
     const interval = raw.repeat
       ? (raw.repeat.trim().toLowerCase() as unknown as TodoInterval)
       : undefined;
 
-    if (interval && !Object.values(TodoInterval).includes(interval)) {
-      return {
-        isLoading: false,
-        state: 'error',
-        data: this.dataList.find((t) => t.id === id) as Todo,
-        error: `Interval must be one of: ${Object.values(TodoInterval).join(', ')}`
-      };
-    }
+    const intervalCheck = this.checkInterval(raw.repeat);
+    if (intervalCheck) return intervalCheck;
 
     const priority = raw.priority
       ? (raw.priority.trim().toLowerCase() as unknown as TodoPriority)
       : undefined;
 
-    if (priority && !Object.values(TodoPriority).includes(priority)) {
-      return {
-        isLoading: false,
-        state: 'error',
-        data: this.dataList.find((t) => t.id === id) as Todo,
-        error: `Priority must be one of: ${Object.values(TodoPriority).join(', ')}`
-      };
-    }
+    const priorityCheck = this.checkPriority(raw.priority);
+    if (priorityCheck) return priorityCheck;
 
     return this.update(id, {
       ...(raw.title !== undefined ? { title: raw.title.trim() } : {}),
@@ -127,24 +176,6 @@ export class TodoState {
       notes: dto.notes,
       priority: dto.priority,
     };
-
-    if (todo.interval && !Object.values(TodoInterval).includes(todo.interval)) {
-      return {
-        isLoading: false,
-        state: 'error',
-        data: undefined,
-        error: `Interval must be one of: ${Object.values(TodoInterval).join(', ')}`
-      };
-    }
-
-    if (todo.priority && !Object.values(TodoPriority).includes(todo.priority)) {
-      return {
-        isLoading: false,
-        state: 'error',
-        data: undefined,
-        error: `Priority must be one of: ${Object.values(TodoPriority).join(', ')}`
-      };
-    }
 
     this.dataDetail = await this.repository.create(todo);
 

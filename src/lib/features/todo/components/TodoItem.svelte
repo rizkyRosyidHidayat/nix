@@ -190,6 +190,7 @@
 				prefix: PREFIXES[field],
 				placeHolder
 			});
+			isExpanded = true;
 			await tick();
 			const inputRef = getInputRef(field);
 			if (inputRef) {
@@ -557,7 +558,7 @@
 							{/if}
 						</Button>
 
-						<Button size="xs" variant="ghost" class="h-7 rounded-full" onclick={toggleExpand}>
+						<Button size="xs" variant="outline" class="h-7 rounded-full" onclick={toggleExpand}>
 							Done
 						</Button>
 					</div>
