@@ -24,7 +24,7 @@
 	</Container>
 {:else if todos.length === 0}
 	<Container>
-		<h1 class="mb-4 text-center text-3xl font-bold">Hello, let's add your first todo</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold">Hello, let's add your first todo</h1>
 		<QuickAction />
 		<p class="text-center text-xs text-muted-foreground">Nix is an application for managing todo</p>
 	</Container>
@@ -34,7 +34,7 @@
 	</Container>
 {:else}
 	<Container class="max-w-md">
-		<h1 class="mb-4 text-center text-3xl font-bold">You are on your way</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold">You are on your way</h1>
 
 		<TodoStackedList {todos} />
 	</Container>
