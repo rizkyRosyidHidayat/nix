@@ -17,7 +17,7 @@
 	let currentMode = $derived(mode.current);
 </script>
 
-<Card.Root class="w-full">
+<Card.Root class="w-full py-4">
 	<Card.Header class="flex flex-row items-center justify-between gap-4">
 		<div class="flex flex-col gap-1">
 			<Card.Title class="text-sm">Application Theme</Card.Title>

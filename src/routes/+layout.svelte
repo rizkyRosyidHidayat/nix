@@ -5,6 +5,7 @@
 	import { Toaster } from '$lib/components/ui/sonner';
 	import Navigation from '$lib/components/global/Navigation.svelte';
 	import { ModeWatcher } from 'mode-watcher';
+	import SupportModal from '$lib/components/global/SupportModal.svelte';
 
 	let { children } = $props();
 </script>
@@ -15,3 +16,4 @@
 <Header />
 {@render children()}
 <Navigation />
+<SupportModal />

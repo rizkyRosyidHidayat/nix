@@ -10,7 +10,6 @@
 	import TodoItem from './TodoItem.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { Kbd } from '$lib/components/ui/kbd';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 
 	const MONTH_NAMES = [
@@ -272,9 +271,6 @@
 				</div>
 
 				<div class="flex items-center gap-1">
-					{#if isSelected && selectedDate}
-						<Kbd class="mr-1">ESC</Kbd>
-					{/if}
 					<Button
 						variant="ghost"
 						size="icon-sm"

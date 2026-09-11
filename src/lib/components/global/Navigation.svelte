@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Home, Plus, ChevronRight, Settings, ListTodo } from '@lucide/svelte';
-	import { slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import QuickAction from './QuickAction.svelte';
 
 	const navItems = [
@@ -47,6 +47,7 @@
 		role="presentation"
 		aria-hidden="true"
 		class="fixed inset-0 z-10 bg-background/50 backdrop-blur-xs transition-all duration-200"
+		transition:fade={{ duration: 200 }}
 		onclick={() => (showQuickAction = false)}
 	></div>
 {/if}
@@ -65,12 +66,12 @@
 					onclick={onClick}
 					tabindex={idx}
 					transition:slide={{ axis: 'x', duration: 200 }}
-					class="flex size-10 cursor-pointer items-center justify-center transition-all duration-200 outline-none focus-visible:outline-none {activatedDomain ===
+					class="flex size-12 cursor-pointer items-center justify-center transition-all duration-200 outline-none focus-visible:outline-none {activatedDomain ===
 					domain
 						? 'text-primary'
 						: 'text-muted-foreground hover:text-primary'}"
 				>
-					<Icon size={16} />
+					<Icon size={20} />
 				</button>
 			{/if}
 		{/each}
@@ -81,7 +82,7 @@
 						? 'text-primary'
 						: 'text-muted-foreground'}"
 				>
-					<ChevronRight size={16} />
+					<ChevronRight size={20} />
 				</div>
 			</div>
 		{/if}
@@ -96,9 +97,9 @@
 	{/if}
 	<button
 		onclick={() => (showQuickAction = !showQuickAction)}
-		class="flex size-10 cursor-pointer items-center justify-center rounded-3xl bg-primary text-primary-foreground transition-all duration-200 outline-none focus-visible:outline-none"
+		class="flex size-12 cursor-pointer items-center justify-center rounded-3xl bg-primary text-primary-foreground transition-all duration-200 outline-none focus-visible:outline-none"
 		aria-label="Add new todo"
 	>
-		<Plus size={16} class={showQuickAction ? 'rotate-45' : ''} />
+		<Plus size={20} class={showQuickAction ? 'rotate-45' : ''} />
 	</button>
 </div>
