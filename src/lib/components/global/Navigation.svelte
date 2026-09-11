@@ -19,8 +19,7 @@
 		},
 		{
 			icon: Settings,
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			onClick: () => goto(resolve('/settings' as any)),
+			onClick: () => goto(resolve('/settings')),
 			domain: '/settings'
 		}
 	];
