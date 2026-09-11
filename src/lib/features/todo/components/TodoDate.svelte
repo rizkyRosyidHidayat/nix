@@ -263,7 +263,7 @@
 							onclick={jumpToToday}
 							variant="outline"
 							size="xs"
-							class="h-6 items-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-all hover:bg-primary/10 hover:text-primary"
+							class="h-6 items-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-all hover:bg-primary/10 hover:text-primary dark:border-primary/50 dark:bg-primary/20"
 						>
 							<RotateCcw size={10} />
 							Today
@@ -323,7 +323,7 @@
 											{isCurrentSelected
 											? 'scale-[1.04] bg-primary font-semibold text-primary-foreground shadow-md'
 											: day.isToday && hasTodos
-												? `border border-primary/40 bg-primary/10 font-medium text-primary hover:bg-primary/20`
+												? `border border-primary/40 bg-primary/10 font-medium text-primary hover:bg-primary/20 dark:bg-primary/20`
 												: hasTodos
 													? 'bg-muted/40 font-medium text-foreground hover:bg-muted/80'
 													: 'text-muted-foreground/50'}"
@@ -332,7 +332,7 @@
 											class="text-[10px] font-medium tracking-wider uppercase sm:text-xs {isCurrentSelected
 												? 'text-primary-foreground/90'
 												: day.isToday && hasTodos
-													? 'text-primary/70'
+													? 'text-primary/70 dark:text-primary'
 													: hasTodos
 														? 'text-foreground/80'
 														: 'text-muted-foreground/50'}"
