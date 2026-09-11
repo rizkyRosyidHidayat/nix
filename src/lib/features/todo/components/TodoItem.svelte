@@ -301,7 +301,7 @@
 	<Card.Root
 		class="relative overflow-hidden border transition-all duration-200
 			{isExpanded
-			? 'gap-3 border-primary/40 py-3.5 shadow-none ring-2 ring-primary/25'
+			? 'gap-3 border-primary/40 py-3.5 shadow-none ring-2 ring-primary/20 dark:ring-primary/50'
 			: 'cursor-pointer gap-0 py-3'}
 			{className}
 		"

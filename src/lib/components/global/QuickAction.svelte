@@ -316,7 +316,7 @@
 
 <Card.Root
 	class="w-full py-4 {isFocused
-		? 'border-primary/40 shadow-md ring-2 ring-primary/20'
+		? 'border-primary/40 shadow-md ring-2 ring-primary/20 dark:ring-primary/50'
 		: 'backdrop-blur-sm'}"
 >
 	<Card.Content class="pr-4">
