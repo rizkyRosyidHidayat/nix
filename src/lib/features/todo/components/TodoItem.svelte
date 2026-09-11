@@ -23,7 +23,11 @@
 	import { toast } from 'svelte-sonner';
 	import { clickOutside } from '$lib/utils';
 
-	let { todo, isExpanded = $bindable() }: { todo: Todo; isExpanded?: boolean } = $props();
+	let {
+		todo,
+		isExpanded = $bindable(),
+		class: className
+	}: { todo: Todo; isExpanded?: boolean; class?: string } = $props();
 
 	const PREFIXES = {
 		notes: 'with note ',
@@ -296,9 +300,11 @@
 >
 	<Card.Root
 		class="relative overflow-hidden border transition-all duration-200
-		{isExpanded
+			{isExpanded
 			? 'gap-3 border-primary/40 py-3.5 shadow-none ring-2 ring-primary/25'
-			: 'cursor-pointer gap-0 py-3'}"
+			: 'cursor-pointer gap-0 py-3'}
+			{className}
+		"
 		onclick={handleCardClick}
 	>
 		<!-- Header / Main row -->
@@ -504,7 +510,7 @@
 						</Button>
 
 						<Button size="xs" variant="outline" class="h-7 rounded-full" onclick={toggleExpand}>
-							Done
+							Save
 						</Button>
 					</div>
 				</div>

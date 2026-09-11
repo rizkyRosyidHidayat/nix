@@ -2,6 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import Kbd from '$lib/components/ui/kbd/kbd.svelte';
 	import { ChevronDown, Calendar, Clock, Repeat, Flag, FileText, Check } from '@lucide/svelte';
 	import { todoState } from '$lib/features/todo';
 	import { tick } from 'svelte';
@@ -20,6 +21,8 @@
 	} as const;
 
 	type FieldKey = keyof typeof PREFIXES;
+
+	let isFocused = $state(false);
 
 	// Form values
 	let title = $state('');
@@ -311,7 +314,11 @@
 	}
 </script>
 
-<Card.Root class="w-full py-4">
+<Card.Root
+	class="w-full py-4 {isFocused
+		? 'border-primary/40 shadow-md ring-2 ring-primary/20'
+		: 'backdrop-blur-sm'}"
+>
 	<Card.Content class="pr-4">
 		<div class="flex flex-wrap items-center justify-end gap-4">
 			<div class="mr-auto flex min-w-[80%] flex-wrap items-center gap-1">
@@ -319,6 +326,8 @@
 					type="text"
 					bind:this={titleInput}
 					bind:value={title}
+					onfocus={() => (isFocused = true)}
+					onblur={() => (isFocused = false)}
 					onkeydown={(e) => {
 						if (e.key === 'Enter') {
 							handleCreate();
@@ -388,7 +397,10 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</div>
-			<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save Todo</Button>
+			<div class="flex items-center gap-2">
+				<Kbd>Enter</Kbd>
+				<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save</Button>
+			</div>
 		</div>
 	</Card.Content>
 </Card.Root>
