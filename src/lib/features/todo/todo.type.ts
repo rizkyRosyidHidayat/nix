@@ -28,7 +28,7 @@ export interface Todo {
 
 export type TodoCreateDto = Omit<
   Todo,
-  'id' | 'createdAt' | 'updatedAt' | 'isCompleted' | 'completedAt'
+  'id' | 'updatedAt' | 'isCompleted' | 'completedAt'
 >;
 
 export type TodoUpdateDto = Partial<Omit<Todo, 'id' | 'createdAt'>>;

@@ -36,6 +36,41 @@ function matchesDate(todo: Todo, targetDate: string): boolean {
 			: createdDate === filterDate;
 }
 
+function formatDateStr(d: Date): string {
+	const year = d.getFullYear();
+	const month = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+function getNextRepeatDate(fromDateStr: string, interval: TodoInterval): string {
+	const from = new SvelteDate(fromDateStr + 'T00:00:00');
+
+	switch (interval) {
+		case TodoInterval.day: {
+			from.setDate(from.getDate() + 1);
+			return formatDateStr(from);
+		}
+		case TodoInterval.weekday: {
+			// Advance to next Mon-Fri
+			do {
+				from.setDate(from.getDate() + 1);
+			} while (from.getDay() === 0 || from.getDay() === 6);
+			return formatDateStr(from);
+		}
+		case TodoInterval.weekend: {
+			// Advance to next Sat or Sun
+			do {
+				from.setDate(from.getDate() + 1);
+			} while (from.getDay() !== 0 && from.getDay() !== 6);
+			return formatDateStr(from);
+		}
+		default:
+			from.setDate(from.getDate() + 1);
+			return formatDateStr(from);
+	}
+}
+
 export class TodoState {
 	private repository: TodoRepository;
 	public selectedDate = $state<string>(new SvelteDate().toISOString().split('T')[0]);
@@ -205,6 +240,7 @@ export class TodoState {
 		return this.create({
 			title: raw.title.trim(),
 			notes: raw.notes || undefined,
+			createdAt: new SvelteDate().toISOString(),
 			startDate,
 			startTime,
 			dueDate,
@@ -260,7 +296,7 @@ export class TodoState {
 			id: crypto.randomUUID(),
 			title: dto.title,
 			isCompleted: false,
-			createdAt: new SvelteDate().toISOString(),
+			createdAt: dto.createdAt,
 			updatedAt: new SvelteDate().toISOString(),
 			startDate: dto.startDate,
 			startTime: dto.startTime,
@@ -420,9 +456,62 @@ export class TodoState {
 	}
 
 	async complete(id: string): Promise<ReturnType<Todo | undefined>> {
-		return this.update(id, {
+		const todo = this.todos.data.find((t) => t.id === id);
+		const result = await this.update(id, {
 			isCompleted: true,
 			completedAt: new SvelteDate().toISOString()
+		});
+
+		// Auto-create next occurrence for repeating todos
+		if (todo?.interval && result.state === 'success') {
+			await this.createNextRepeat(todo);
+		}
+
+		return result;
+	}
+
+	private async createNextRepeat(completedTodo: Todo): Promise<void> {
+		if (!completedTodo.interval) return;
+
+		const createdAt = completedTodo.createdAt.split('T')[0];
+		const baseDate =
+			completedTodo.dueDate ||
+			completedTodo.startDate ||
+			createdAt;
+
+		let nextDate = getNextRepeatDate(baseDate, completedTodo.interval);
+
+		// Ensure the next occurrence is strictly in the future.
+		// If completing an overdue task, skip past missed days.
+		while (nextDate <= createdAt) {
+			nextDate = getNextRepeatDate(nextDate, completedTodo.interval);
+		}
+
+		// Compute shifted dueDate if the original had one
+		let nextDueDate: string | undefined;
+		if (completedTodo.dueDate) {
+			if (completedTodo.startDate && completedTodo.dueDate !== completedTodo.startDate) {
+				// Preserve the duration between startDate and dueDate
+				const startMs = new SvelteDate(completedTodo.startDate + 'T00:00:00').getTime();
+				const dueMs = new SvelteDate(completedTodo.dueDate + 'T00:00:00').getTime();
+				const durationMs = dueMs - startMs;
+				const nextDue = new SvelteDate(new SvelteDate(nextDate + 'T00:00:00').getTime() + durationMs);
+				nextDueDate = formatDateStr(nextDue);
+			} else {
+				nextDueDate = nextDate;
+			}
+		}
+
+		await this.create({
+			title: completedTodo.title,
+			notes: completedTodo.notes,
+			priority: completedTodo.priority,
+			interval: completedTodo.interval,
+			startDate: completedTodo.startDate ? nextDate : undefined,
+			startTime: completedTodo.startTime,
+			dueDate: nextDueDate,
+			endTime: completedTodo.endTime,
+			createdAt: new SvelteDate(nextDate).toISOString(),
 		});
 	}
 
