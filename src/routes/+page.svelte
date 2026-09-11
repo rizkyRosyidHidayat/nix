@@ -18,7 +18,7 @@
 	});
 </script>
 
-{#if isLoading && todos.length === 0}
+{#if isLoading}
 	<Container>
 		<h1 class="text-center text-xl leading-relaxed text-muted-foreground">Loading...</h1>
 	</Container>
