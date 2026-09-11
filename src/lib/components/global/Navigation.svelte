@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { CheckSquare, Home, Plus, ChevronRight, Settings } from '@lucide/svelte';
+	import { Home, Plus, ChevronRight, Settings, ListTodo } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
 	import QuickAction from './QuickAction.svelte';
 
@@ -13,7 +13,7 @@
 			domain: '/'
 		},
 		{
-			icon: CheckSquare,
+			icon: ListTodo,
 			onClick: () => goto(resolve('/todo')),
 			domain: '/todo'
 		},
