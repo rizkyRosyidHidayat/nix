@@ -6,8 +6,15 @@
 	import Navigation from '$lib/components/global/Navigation.svelte';
 	import { ModeWatcher } from 'mode-watcher';
 	import SupportModal from '$lib/components/global/SupportModal.svelte';
+	import TodoTimerModal from '$lib/features/todo/components/TodoTimerModal.svelte';
+	import { todoTimerState } from '$lib/features/todo/todo.timer.svelte';
 
 	let { children } = $props();
+
+	$effect(() => {
+		todoTimerState.start();
+		return () => todoTimerState.stop();
+	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -17,3 +24,4 @@
 {@render children()}
 <Navigation />
 <SupportModal />
+<TodoTimerModal />

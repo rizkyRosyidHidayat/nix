@@ -357,7 +357,7 @@
 					<DropdownMenu.Trigger>
 						<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
 						{#snippet child({ props }: any)}
-							{#if hasTitle && title?.length >= 6}
+							{#if hasTitle && title?.length >= 3}
 								<Button size="icon-xs" variant="ghost" class="mt-0.5" {...props}>
 									<ChevronDown />
 								</Button>

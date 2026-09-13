@@ -34,7 +34,7 @@
 	</Container>
 {:else}
 	<Container class="max-w-md">
-		<h1 class="mb-2 text-center text-3xl font-bold">You are on your way</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold">Check You're pending task</h1>
 
 		<TodoStackedList {todos} />
 	</Container>
