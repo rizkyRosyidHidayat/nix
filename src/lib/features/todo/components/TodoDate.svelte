@@ -347,6 +347,9 @@
 			</Carousel.Root>
 		</Card.Content>
 	</Card.Root>
+	<p class="mt-4 px-2 text-center text-xs text-muted-foreground/50">
+		The disabled date because there is no todo items
+	</p>
 
 	<!-- Date Results Dropdown -->
 	{#if isSelected && selectedDate}

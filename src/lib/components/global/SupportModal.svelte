@@ -48,7 +48,7 @@
 						href="https://ko-fi.com/M2Y525H15R"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-3 transition-colors hover:border-destructive/50"
+						class="flex items-center justify-center gap-2 rounded-2xl border bg-background px-4 py-3 transition-colors hover:border-destructive/50"
 						onclick={close}
 					>
 						<Coffee size={18} class="text-destructive" />
@@ -58,7 +58,7 @@
 						href="https://github.com/rizkyRosyidHidayat/hinix"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-3 transition-colors hover:border hover:border-primary"
+						class="flex items-center justify-center gap-2 rounded-2xl border bg-background px-4 py-3 transition-colors hover:border hover:border-primary"
 						onclick={close}
 					>
 						<svg
@@ -78,7 +78,7 @@
 						href="https://x.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-3 transition-colors hover:border hover:border-primary"
+						class="flex items-center justify-center gap-2 rounded-2xl border bg-background px-4 py-3 transition-colors hover:border hover:border-primary"
 						onclick={close}
 					>
 						<svg
