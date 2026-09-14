@@ -19,6 +19,7 @@
 	import { tick, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { clickOutside } from '$lib/utils';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
 
 	let {
 		todo,
@@ -367,7 +368,13 @@
 			</div>
 
 			<!-- Right quick actions -->
-			<div class="flex items-center gap-1">
+			<div class="group relative flex items-center gap-1">
+				{#if !isExpanded && metadata.some((m) => m.value)}
+					<Badge
+						class="relative -right-8 h-6 min-w-6 shrink-0 rounded-full px-0 font-mono text-xs tabular-nums transition-all duration-200 group-hover/item:right-0"
+						variant="destructive">+{metadata.filter((m) => m.value).length}</Badge
+					>
+				{/if}
 				<Button
 					size="icon-sm"
 					variant="ghost"
@@ -389,10 +396,6 @@
 						size={16}
 						class="transition-transform duration-200 {isExpanded ? 'rotate-180 text-primary' : ''}"
 					/>
-					{#if !isExpanded && (todo.priority || todo.dueDate || todo.endTime || todo.startDate || todo.startTime || todo.interval || todo.notes)}
-						<span class="absolute top-0 right-0 inline-block size-1.5 rounded-full bg-destructive"
-						></span>
-					{/if}
 				</Button>
 			</div>
 		</div>
