@@ -215,6 +215,13 @@
 		}
 	});
 
+	$effect(() => {
+		const isAnyExpanded = Object.values(expandedItems).some(Boolean);
+		if (isSelected && isAnyExpanded) {
+			scrollToDropdown();
+		}
+	});
+
 	function handleCarouselInit(api: CarouselAPI | undefined) {
 		carouselApi = api;
 		if (!api) return;
@@ -347,9 +354,11 @@
 			</Carousel.Root>
 		</Card.Content>
 	</Card.Root>
-	<p class="mt-4 px-2 text-center text-xs text-muted-foreground/50">
-		There is no todo items in the disabled date
-	</p>
+	{#if !isSelected}
+		<p class="mt-4 text-center text-sm text-muted-foreground/70">
+			There is no todo items in the disabled date
+		</p>
+	{/if}
 
 	<!-- Date Results Dropdown -->
 	{#if isSelected && selectedDate}
