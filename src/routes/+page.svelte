@@ -27,7 +27,9 @@
 	<Container>
 		<h1 class="mb-2 text-center text-3xl font-bold">Hello, let's add your first todo</h1>
 		<QuickAction />
-		<p class="text-center text-xs text-muted-foreground">Nix is an application for managing todo</p>
+		<p class="text-center text-xs text-muted-foreground/50">
+			Nix is an application for managing todo
+		</p>
 	</Container>
 {:else if todos.length === 1 && globalState.getIsFirstAddTodo()}
 	<Container>

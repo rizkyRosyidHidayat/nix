@@ -32,17 +32,30 @@
 	let isHovering = $state(false);
 	let isAnyExpanded = $derived(Object.values(expandedItems).some(Boolean));
 	let isListHovered = $derived(isHovering || isAnyExpanded);
-	let itemHeights = $state<number[]>([]);
 	let hiddenCount = $derived(Math.max(0, allTodos.length - MAX_VISIBLE));
 	let hasHidden = $derived(allTodos.length > MAX_VISIBLE);
+
+	let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function onMouseEnter() {
+		clearTimeout(hoverTimer);
+		isHovering = true;
+	}
+
+	function onMouseLeave() {
+		clearTimeout(hoverTimer);
+		hoverTimer = setTimeout(() => {
+			isHovering = false;
+		}, 150);
+	}
 </script>
 
 <div
-	class="relative w-full transition-all duration-300"
+	class="relative w-full py-1"
 	role="list"
 	aria-label="Today's todos"
-	onmouseenter={() => (isHovering = true)}
-	onmouseleave={() => (isHovering = false)}
+	onmouseenter={onMouseEnter}
+	onmouseleave={onMouseLeave}
 >
 	<!-- Single continuous animated container for seamless transition -->
 	<div
@@ -88,17 +101,16 @@
 					{#each group.todos as todo (todo.id)}
 						{@const idx = todoIndexMap.get(todo.id) ?? 0}
 						<div
-							class="w-full transition-all duration-300 ease-out"
-							bind:clientHeight={itemHeights[idx]}
+							class="stack-card w-full"
+							class:is-hovered={isListHovered}
+							class:is-top={idx === 0}
+							class:is-stacked={idx > 0 && idx < MAX_VISIBLE}
+							class:is-hidden-stack={idx >= MAX_VISIBLE}
 							style="
-								{!isListHovered
-								? idx === 0
-									? 'position: relative; z-index: 10; transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; margin-top: 0;'
-									: idx < MAX_VISIBLE
-										? `position: relative; z-index: ${MAX_VISIBLE - idx + 5}; margin-top: -${itemHeights[idx - 1] || 64}px; transform: translateY(${idx * 14}px) scale(${1 - idx * 0.04}); opacity: 1; pointer-events: none;`
-										: `position: relative; z-index: 0; margin-top: -${itemHeights[idx - 1] || 64}px; transform: translateY(${MAX_VISIBLE * 14}px) scale(0.88); opacity: 0; pointer-events: none;`
-								: 'position: relative; z-index: 1; margin-top: 0; transform: translateY(0) scale(1); opacity: 1; pointer-events: auto;'}
-								transform-origin: top center;
+								--stack-idx: {idx};
+								--stack-offset: {idx * 14}px;
+								--stack-scale: {1 - idx * 0.04};
+								--stack-z: {MAX_VISIBLE - idx + 5};
 							"
 						>
 							<div class="w-full">
@@ -116,7 +128,7 @@
 		<div
 			class="flex justify-center transition-all duration-300 ease-out {isListHovered
 				? 'pointer-events-none mt-0 max-h-0 opacity-0'
-				: 'mt-10 max-h-12 opacity-100'}"
+				: 'mt-8 max-h-12 opacity-100'}"
 		>
 			<button
 				class="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
@@ -125,4 +137,61 @@
 			</button>
 		</div>
 	{/if}
+	{#if !hasHidden}
+		<p
+			class="text-center text-xs text-muted-foreground/50 transition-all duration-300 ease-out {isListHovered
+				? 'pointer-events-none mt-0 max-h-0 opacity-0'
+				: 'max-h-8 opacity-100'}"
+			style="margin-top: {allTodos.length * 12}px"
+		>
+			Hover the todo to expand
+		</p>
+	{/if}
 </div>
+
+<style>
+	.stack-card {
+		position: relative;
+		transform-origin: top center;
+		will-change: transform, margin-top, opacity;
+		backface-visibility: hidden;
+		transition:
+			transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+			margin-top 300ms cubic-bezier(0.16, 1, 0.3, 1),
+			opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	/* Collapsed states */
+	.stack-card:not(.is-hovered).is-top {
+		z-index: 10;
+		transform: translateY(0) scale(1);
+		opacity: 1;
+		margin-top: 0;
+		pointer-events: auto;
+	}
+
+	.stack-card:not(.is-hovered).is-stacked {
+		z-index: var(--stack-z);
+		margin-top: -52px;
+		transform: translateY(var(--stack-offset)) scale(var(--stack-scale));
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.stack-card:not(.is-hovered).is-hidden-stack {
+		z-index: 0;
+		margin-top: -64px;
+		transform: translateY(42px) scale(0.88);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* Expanded / Hovered states */
+	.stack-card.is-hovered {
+		z-index: 1;
+		margin-top: 0;
+		transform: translateY(0) scale(1);
+		opacity: 1;
+		pointer-events: auto;
+	}
+</style>
