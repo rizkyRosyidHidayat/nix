@@ -32,3 +32,10 @@ export type TodoCreateDto = Omit<
 >;
 
 export type TodoUpdateDto = Partial<Omit<Todo, 'id' | 'createdAt'>>;
+
+export interface TodoDateGroup {
+  date: string;
+  dateLabel: string;
+  formattedDate: string;
+  todos: Todo[];
+}

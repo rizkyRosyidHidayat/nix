@@ -1,16 +1,80 @@
 import { browser } from '$app/environment';
 import * as chrono from 'chrono-node';
-import type { Todo, TodoCreateDto, TodoUpdateDto } from './todo.type';
+import type { Todo, TodoCreateDto, TodoUpdateDto, TodoDateGroup } from './todo.type';
 import { TodoPriority, TodoInterval } from './todo.type';
 import { todoRepository, type TodoRepository } from './todo.repository';
 import type { ReturnType } from '$lib/utils';
-import { SvelteDate } from 'svelte/reactivity';
+import { SvelteDate, SvelteMap } from 'svelte/reactivity';
 
 const PRIORITY_ORDER: Record<TodoPriority, number> = {
 	[TodoPriority.high]: 1,
 	[TodoPriority.medium]: 2,
 	[TodoPriority.low]: 3
 };
+
+export function formatTodoDateGroupLabel(dateStr: string): { dateLabel: string; formattedDate: string } {
+	if (!dateStr) return { dateLabel: 'No Date', formattedDate: '' };
+
+	const parts = dateStr.split('T')[0].split('-');
+	if (parts.length < 3) return { dateLabel: dateStr, formattedDate: dateStr };
+
+	const [y, m, d] = parts.map(Number);
+	const target = new SvelteDate(y, m - 1, d);
+	if (isNaN(target.getTime())) return { dateLabel: dateStr, formattedDate: dateStr };
+
+	const today = new SvelteDate();
+	today.setHours(0, 0, 0, 0);
+
+	const targetZero = new SvelteDate(target);
+	targetZero.setHours(0, 0, 0, 0);
+
+	const diffDays = Math.round((targetZero.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+	const formattedDate = target.toLocaleDateString(undefined, {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric'
+	});
+
+	let dateLabel = formattedDate;
+	if (diffDays === 0) {
+		dateLabel = 'Today';
+	} else if (diffDays === 1) {
+		dateLabel = 'Tomorrow';
+	} else if (diffDays === -1) {
+		dateLabel = 'Yesterday';
+	} else if (diffDays > 1 && diffDays < 7) {
+		dateLabel = target.toLocaleDateString(undefined, { weekday: 'short' });
+	}
+
+	return { dateLabel, formattedDate };
+}
+
+export function groupTodosByDate(todos: Todo[]): TodoDateGroup[] {
+	const map = new SvelteMap<string, Todo[]>();
+
+	for (const todo of todos) {
+		const dateKey =
+			todo.dueDate ||
+			todo.startDate ||
+			(todo.createdAt ? todo.createdAt.split('T')[0] : '');
+
+		if (!map.has(dateKey)) {
+			map.set(dateKey, []);
+		}
+		map.get(dateKey)!.push(todo);
+	}
+
+	return Array.from(map.entries()).map(([date, items]) => {
+		const { dateLabel, formattedDate } = formatTodoDateGroupLabel(date);
+		return {
+			date,
+			dateLabel,
+			formattedDate,
+			todos: items
+		};
+	});
+}
 
 function getDueDateTime(todo: Todo): number | null {
 	if (!todo.dueDate) return null;
@@ -106,12 +170,25 @@ export class TodoState {
 			}
 
 			// 3. Created date (ascending)
-			return new SvelteDate(a.createdAt).getTime() - new SvelteDate(b.createdAt).getTime();
+			const dateA = a.dueDate || a.startDate || a.createdAt;
+			const dateB = b.dueDate || b.startDate || b.createdAt;
+			return new SvelteDate(dateA).getTime() - new SvelteDate(dateB).getTime();
 		});
 
 		return {
 			isLoading: this.todos.isLoading,
 			data: sorted,
+			state: this.todos.state,
+			error: this.todos.error
+		};
+	});
+
+	// Derived reactive view: Upcoming incomplete todos grouped by date
+	public upcomingTodosGrouped: ReturnType<TodoDateGroup[]> = $derived.by(() => {
+		const groups = groupTodosByDate(this.upcomingTodos.data);
+		return {
+			isLoading: this.todos.isLoading,
+			data: groups,
 			state: this.todos.state,
 			error: this.todos.error
 		};

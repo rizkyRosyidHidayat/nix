@@ -6,6 +6,7 @@
 	import TodoStackedList from '$lib/features/todo/components/TodoStackedList.svelte';
 
 	let todos = $derived(todoState.upcomingTodos.data);
+	let groupedTodos = $derived(todoState.upcomingTodosGrouped.data);
 	let isLoading = $derived(todoState.upcomingTodos.isLoading);
 
 	$effect(() => {
@@ -36,6 +37,6 @@
 	<Container class="max-w-md">
 		<h1 class="mb-2 text-center text-3xl font-bold">Check You're pending task</h1>
 
-		<TodoStackedList {todos} />
+		<TodoStackedList {todos} {groupedTodos} />
 	</Container>
 {/if}
