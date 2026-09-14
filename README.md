@@ -8,7 +8,7 @@
 
 - **⚡ Quick Command Input & Natural Language Parsing**: Quickly create todos with smart metadata extraction (`at tomorrow 3pm`, `at deadline next friday`, `on a priority high`, `on every weekday`, `with note ...`) powered by `chrono-node`.
 - **🃏 Interactive Stacked List**: Sonner-style stacked task cards that seamlessly unfold on hover with smooth spring-like animations.
-- **📅 Smart Date Grouping**: Tasks are automatically categorized into intuitive sections (*Today*, *Tomorrow*, specific days, and upcoming deadlines).
+- **📅 Smart Date Grouping**: Tasks are automatically categorized into intuitive sections (_Today_, _Tomorrow_, specific days, and upcoming deadlines).
 - **🗓️ Weekly Calendar Carousel**: Browse tasks by date using an interactive weekly carousel that highlights dates with active todos.
 - **⏱️ Task Countdown & Snooze Modal**: Auto-prompt countdown modal for upcoming time-sensitive tasks with snooze (15-min) and stop controls.
 - **🔍 Quick Search**: Instant search filtering across titles, notes, and priority tags with keyboard shortcuts (`Enter`, `ESC`).
@@ -38,17 +38,20 @@
 ### Installation
 
 1. Clone the repository:
+
    ```sh
    git clone https://github.com/rizkyRosyidHidayat/hinix.git
    cd todo
    ```
 
 2. Install dependencies:
+
    ```sh
    pnpm install
    ```
 
 3. Start the development server:
+
    ```sh
    pnpm dev
    ```
@@ -59,18 +62,18 @@
 
 ## 📜 Available Scripts
 
-| Command | Description |
-| :--- | :--- |
-| `pnpm dev` | Starts the Vite development server |
-| `pnpm build` | Builds the production bundle |
-| `pnpm preview` | Locally previews the production build |
-| `pnpm check` | Runs SvelteKit sync and TypeScript diagnostics |
-| `pnpm lint` | Checks code formatting and ESLint rules |
-| `pnpm format` | Formats code with Prettier |
-| `pnpm test` | Runs unit and component tests with Vitest |
+| Command        | Description                                    |
+| :------------- | :--------------------------------------------- |
+| `pnpm dev`     | Starts the Vite development server             |
+| `pnpm build`   | Builds the production bundle                   |
+| `pnpm preview` | Locally previews the production build          |
+| `pnpm check`   | Runs SvelteKit sync and TypeScript diagnostics |
+| `pnpm lint`    | Checks code formatting and ESLint rules        |
+| `pnpm format`  | Formats code with Prettier                     |
+| `pnpm test`    | Runs unit and component tests with Vitest      |
 
 ---
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available under the [GNU GPL v3 License](LICENSE).
