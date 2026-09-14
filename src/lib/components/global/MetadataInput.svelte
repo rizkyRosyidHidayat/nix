@@ -63,6 +63,6 @@
 				handleCreate();
 			}
 		}}
-		class="field-sizing-content outline-none placeholder:text-muted-foreground"
+		class="field-sizing-content text-foreground outline-none placeholder:text-muted-foreground"
 	/>
 {/if}

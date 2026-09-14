@@ -133,7 +133,7 @@
 						value: repeatValue,
 						input: null,
 						prefix: PREFIXES.repeat,
-						placeHolder: 'e.g. daily, weekday, weekend'
+						placeHolder: 'e.g. day, weekday, weekend'
 					});
 				}
 				break;

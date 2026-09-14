@@ -51,84 +51,121 @@
 		return `${year}-${month}-${day}`;
 	}
 
-	function getMonday(d: Date): Date {
-		const date = new SvelteDate(d.getFullYear(), d.getMonth(), d.getDate());
-		const day = date.getDay();
-		const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-		return new Date(date.setDate(diff));
-	}
-
 	interface DayItem {
 		dateStr: string;
 		dayNumber: number;
 		dayName: string;
 		isToday: boolean;
+		isCurrentMonth: boolean;
 		month: number;
 		year: number;
 	}
 
-	interface WeekItem {
+	interface MonthItem {
 		id: string;
-		days: DayItem[];
-		label: string;
-		monthName: string;
+		month: number;
 		year: number;
+		monthName: string;
+		shortMonthName: string;
+		label: string;
+		days: DayItem[];
 	}
 
 	const now = new SvelteDate();
 	const todayStr = formatLocalDate(now);
-	const baseMonday = getMonday(now);
 
-	const TOTAL_PAST_WEEKS = 26;
-	const TOTAL_FUTURE_WEEKS = 26;
-	const currentWeekIndex = TOTAL_PAST_WEEKS;
+	const TOTAL_PAST_MONTHS = 24;
+	const TOTAL_FUTURE_MONTHS = 24;
+	const currentMonthIndex = TOTAL_PAST_MONTHS;
 
-	function generateWeeks(): WeekItem[] {
-		const list: WeekItem[] = [];
-		for (let offset = -TOTAL_PAST_WEEKS; offset <= TOTAL_FUTURE_WEEKS; offset++) {
-			const monday = new Date(baseMonday.getTime() + offset * 7 * 86400000);
+	function generateMonths(): MonthItem[] {
+		const list: MonthItem[] = [];
+		const currentYear = now.getFullYear();
+		const currentMonth = now.getMonth();
+
+		for (let offset = -TOTAL_PAST_MONTHS; offset <= TOTAL_FUTURE_MONTHS; offset++) {
+			const targetDate = new Date(currentYear, currentMonth + offset, 1);
+			const year = targetDate.getFullYear();
+			const month = targetDate.getMonth();
+			const monthName = MONTH_NAMES[month];
+			const shortMonthName = SHORT_MONTH_NAMES[month];
+			const label = `${monthName} ${year}`;
+
+			const daysInMonth = new Date(year, month + 1, 0).getDate();
+			const firstDayWeekday = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0 ... Sun=6
+			const daysInPrevMonth = new Date(year, month, 0).getDate();
+
 			const days: DayItem[] = [];
 
-			for (let d = 0; d < 7; d++) {
-				const dayDate = new Date(monday.getTime() + d * 86400000);
-				const dateStr = formatLocalDate(dayDate);
+			// Leading days from previous month
+			for (let i = firstDayWeekday - 1; i >= 0; i--) {
+				const dayNum = daysInPrevMonth - i;
+				const d = new Date(year, month - 1, dayNum);
+				const dateStr = formatLocalDate(d);
 				days.push({
 					dateStr,
-					dayNumber: dayDate.getDate(),
-					dayName: DAY_NAMES[d],
+					dayNumber: dayNum,
+					dayName: DAY_NAMES[(d.getDay() + 6) % 7],
 					isToday: dateStr === todayStr,
-					month: dayDate.getMonth(),
-					year: dayDate.getFullYear()
+					isCurrentMonth: false,
+					month: d.getMonth(),
+					year: d.getFullYear()
 				});
 			}
 
-			const firstDay = days[0];
-			const lastDay = days[6];
-			let label;
-			if (firstDay.month === lastDay.month) {
-				label = `${SHORT_MONTH_NAMES[firstDay.month]}, ${firstDay.year}`;
-			} else {
-				label = `${SHORT_MONTH_NAMES[firstDay.month]}, ${lastDay.year}`;
+			// Days of current month
+			for (let d = 1; d <= daysInMonth; d++) {
+				const dateObj = new Date(year, month, d);
+				const dateStr = formatLocalDate(dateObj);
+				days.push({
+					dateStr,
+					dayNumber: d,
+					dayName: DAY_NAMES[(dateObj.getDay() + 6) % 7],
+					isToday: dateStr === todayStr,
+					isCurrentMonth: true,
+					month,
+					year
+				});
+			}
+
+			// Trailing days from next month to complete the week
+			const remainder = days.length % 7;
+			const trailingCount = remainder === 0 ? 0 : 7 - remainder;
+			for (let t = 1; t <= trailingCount; t++) {
+				const d = new Date(year, month + 1, t);
+				const dateStr = formatLocalDate(d);
+				days.push({
+					dateStr,
+					dayNumber: t,
+					dayName: DAY_NAMES[(d.getDay() + 6) % 7],
+					isToday: dateStr === todayStr,
+					isCurrentMonth: false,
+					month: d.getMonth(),
+					year: d.getFullYear()
+				});
 			}
 
 			list.push({
-				id: `week-${firstDay.dateStr}`,
-				days,
+				id: `month-${year}-${String(month + 1).padStart(2, '0')}`,
+				month,
+				year,
+				monthName,
+				shortMonthName,
 				label,
-				monthName: MONTH_NAMES[firstDay.month],
-				year: firstDay.year
+				days
 			});
 		}
+
 		return list;
 	}
 
-	const weeks = generateWeeks();
+	const months = generateMonths();
 
 	// State
 	let isSelected = $state(false);
 	let selectedDate = $state<string>('');
 	let carouselApi = $state<CarouselAPI>();
-	let activeWeekIndex = $state<number>(currentWeekIndex);
+	let activeMonthIndex = $state<number>(currentMonthIndex);
 	let canScrollPrev = $state<boolean>(true);
 	let canScrollNext = $state<boolean>(true);
 	let expandedItems = $state<Record<string, boolean>>({});
@@ -137,7 +174,7 @@
 	let dateTodos = $derived(todoState.todosByDate);
 
 	// Derived
-	let currentWeek = $derived(weeks[activeWeekIndex] || weeks[currentWeekIndex]);
+	let currentMonth = $derived(months[activeMonthIndex] || months[currentMonthIndex]);
 
 	let formattedSelectedDate = $derived.by(() => {
 		if (!selectedDate) return '';
@@ -172,7 +209,7 @@
 	async function jumpToToday() {
 		selectedDate = todayStr;
 		isSelected = true;
-		carouselApi?.scrollTo(currentWeekIndex);
+		carouselApi?.scrollTo(currentMonthIndex);
 		await tick();
 		scrollToDropdown();
 	}
@@ -191,8 +228,7 @@
 	let datesWithTodos = $derived.by(() => {
 		const dates = new SvelteSet<string>();
 		for (const todo of todoState.todos.data) {
-			const targetDate =
-				todo.dueDate || todo.startDate || (todo.createdAt ? todo.createdAt.split('T')[0] : '');
+			const targetDate = todo.createdAt ? todo.createdAt.split('T')[0] : '';
 			if (targetDate) {
 				dates.add(targetDate);
 			}
@@ -226,7 +262,7 @@
 		carouselApi = api;
 		if (!api) return;
 		api.on('select', () => {
-			activeWeekIndex = api.selectedScrollSnap();
+			activeMonthIndex = api.selectedScrollSnap();
 			canScrollPrev = api.canScrollPrev();
 			canScrollNext = api.canScrollNext();
 		});
@@ -247,24 +283,25 @@
 {/if}
 
 <div
-	class="relative w-full max-w-md transition-all duration-300 ease-out {isSelected && selectedDate
+	class="relative w-full max-w-md animate-in transition-all duration-300 ease-out fade-in slide-in-from-bottom-4 {isSelected &&
+	selectedDate
 		? 'z-50'
 		: 'z-10'}"
 >
-	<!-- Weekly Date Carousel Card -->
+	<!-- Monthly Calendar Carousel Card -->
 	<Card.Root
 		class="w-full py-3 transition-all duration-300 ease-out {isSelected && selectedDate
 			? 'border-primary/40 shadow-md ring-2 ring-primary/20 dark:ring-primary/50'
 			: 'backdrop-blur-sm'}"
 	>
 		<Card.Content class="px-3">
-			<!-- Week Navigation Bar -->
-			<div class="mb-2 flex items-center justify-between">
+			<!-- Month Navigation Bar -->
+			<div class="mb-3 flex items-center justify-between">
 				<div class="flex items-center gap-2 pl-1">
-					<h2 class="text-sm tracking-tight text-foreground">
-						{currentWeek?.label}
+					<h2 class="text-sm font-semibold tracking-tight text-foreground sm:text-base">
+						{currentMonth?.label}
 					</h2>
-					{#if selectedDate && selectedDate !== todayStr}
+					{#if (selectedDate && selectedDate !== todayStr) || activeMonthIndex !== currentMonthIndex}
 						<Button
 							onclick={jumpToToday}
 							variant="outline"
@@ -283,7 +320,7 @@
 						size="icon-sm"
 						onclick={() => carouselApi?.scrollPrev()}
 						disabled={!canScrollPrev}
-						title="Previous week"
+						title="Previous month"
 						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronLeft size={16} />
@@ -293,7 +330,7 @@
 						size="icon-sm"
 						onclick={() => carouselApi?.scrollNext()}
 						disabled={!canScrollNext}
-						title="Next week"
+						title="Next month"
 						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronRight size={16} />
@@ -301,10 +338,21 @@
 				</div>
 			</div>
 
-			<!-- Carousel Slider -->
+			<!-- Fixed Weekday Header -->
+			<div class="mb-1.5 grid grid-cols-7 gap-1 text-center">
+				{#each DAY_NAMES as dayName (dayName)}
+					<span
+						class="text-[11px] font-medium tracking-wider text-muted-foreground/70 uppercase sm:text-xs"
+					>
+						{dayName}
+					</span>
+				{/each}
+			</div>
+
+			<!-- Month Carousel Slider -->
 			<Carousel.Root
 				opts={{
-					startIndex: currentWeekIndex,
+					startIndex: currentMonthIndex,
 					align: 'start',
 					loop: false
 				}}
@@ -312,39 +360,30 @@
 				class="w-full"
 			>
 				<Carousel.Content class="-ms-2">
-					{#each weeks as week (week.id)}
+					{#each months as month (month.id)}
 						<Carousel.Item class="basis-full ps-2">
-							<div class="grid grid-cols-7 gap-1 sm:gap-3">
-								{#each week.days as day (day.dateStr)}
+							<div class="grid grid-cols-7 gap-1 sm:gap-1.5">
+								{#each month.days as day (day.dateStr)}
 									{@const isCurrentSelected = selectedDate === day.dateStr}
 									{@const hasTodos = datesWithTodos.has(day.dateStr)}
 									<button
 										type="button"
 										disabled={!hasTodos}
 										onclick={() => selectDate(day.dateStr)}
-										class="group relative flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-1 py-1.5 pb-2.5 text-center transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-50
+										class="group relative flex h-9 w-full flex-col items-center justify-center rounded-xl text-center text-xs transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:text-sm
 											{isCurrentSelected
-											? 'bg-primary font-semibold text-primary-foreground shadow-md'
+											? 'bg-primary font-semibold text-primary-foreground shadow-xs'
 											: day.isToday && hasTodos
-												? `border border-primary/40 bg-primary/10 font-medium text-primary hover:bg-primary/20 dark:bg-primary/20`
-												: hasTodos
-													? 'bg-muted/40 font-medium text-foreground hover:bg-muted/80'
-													: 'text-muted-foreground/50'}"
-									>
-										<span
-											class="text-xs font-medium tracking-wider uppercase sm:text-sm {isCurrentSelected
-												? 'text-primary-foreground/90'
-												: day.isToday && hasTodos
-													? 'text-primary/70 dark:text-primary'
+												? 'border border-primary/40 bg-primary/10 font-semibold text-primary hover:bg-primary/20 dark:bg-primary/20'
+												: day.isToday
+													? 'border border-muted-foreground/30 font-medium text-foreground'
 													: hasTodos
-														? 'text-foreground/80'
-														: 'text-muted-foreground/50'}"
-										>
-											{day.dayName}
-										</span>
-										<span class="text-xs font-semibold sm:text-base">
-											{day.dayNumber}
-										</span>
+														? 'bg-muted/50 font-medium text-foreground hover:bg-muted/80'
+														: day.isCurrentMonth
+															? 'text-muted-foreground/50'
+															: 'text-muted-foreground/20'}"
+									>
+										<span>{day.dayNumber}</span>
 									</button>
 								{/each}
 							</div>
@@ -377,8 +416,8 @@
 						{dateTodos.isLoading
 							? 'Loading tasks...'
 							: dateTodos.data.length === 1
-								? '1 task scheduled'
-								: `${dateTodos.data.length} tasks scheduled`}
+								? '1 task'
+								: `${dateTodos.data.length} tasks`}
 					</span>
 					{#if formattedSelectedDate}
 						<span class="text-sm opacity-70">
@@ -412,7 +451,7 @@
 					<div
 						class="flex flex-col items-center justify-center gap-1.5 py-6 text-center text-muted-foreground"
 					>
-						<p class="text-sm font-medium text-foreground">No tasks scheduled for this date</p>
+						<p class="text-sm font-medium text-foreground">No tasks added for this date</p>
 						<p class="text-xs text-muted-foreground">Choose another date or create a new task</p>
 					</div>
 				{/if}

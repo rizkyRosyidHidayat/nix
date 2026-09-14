@@ -5,8 +5,12 @@
 	import { Home, Plus, ChevronRight, Settings, ListTodo } from '@lucide/svelte';
 	import { fade, slide } from 'svelte/transition';
 	import QuickAction from './QuickAction.svelte';
+	import { todoState } from '$lib/features/todo';
+	import Badge from '../ui/badge/badge.svelte';
 
-	const navItems = [
+	const upcomingTodos = $derived(todoState.upcomingTodos.data ?? []);
+
+	const navItems = $derived([
 		{
 			icon: Home,
 			onClick: () => goto(resolve('/')),
@@ -15,14 +19,15 @@
 		{
 			icon: ListTodo,
 			onClick: () => goto(resolve('/todo')),
-			domain: '/todo'
+			domain: '/todo',
+			count: upcomingTodos.length
 		},
 		{
 			icon: Settings,
 			onClick: () => goto(resolve('/settings')),
 			domain: '/settings'
 		}
-	];
+	]);
 
 	const activatedDomain = $derived(
 		navItems.find((item) => {
@@ -60,17 +65,23 @@
 		onmouseenter={() => (isHovered = true)}
 		onmouseleave={() => (isHovered = false)}
 	>
-		{#each navItems as { icon: Icon, onClick, domain }, idx (idx)}
+		{#each navItems as { icon: Icon, onClick, domain, count }, idx (idx)}
 			{#if isHovered || idx < 3}
 				<button
 					onclick={onClick}
 					tabindex={idx}
 					transition:slide={{ axis: 'x', duration: 200 }}
-					class="flex size-12 cursor-pointer items-center justify-center transition-all duration-200 outline-none focus-visible:outline-none {activatedDomain ===
+					class="relative flex size-12 cursor-pointer items-center justify-center transition-all duration-200 outline-none focus-visible:outline-none {activatedDomain ===
 					domain
 						? 'text-primary'
 						: 'text-muted-foreground hover:text-primary'}"
 				>
+					{#if (count || 0) > 0 && activatedDomain !== domain}
+						<Badge
+							class="absolute top-1 right-1 h-4 min-w-4 rounded-full bg-destructive px-1 font-mono text-white tabular-nums "
+							variant="destructive">{count}</Badge
+						>
+					{/if}
 					<Icon size={20} />
 				</button>
 			{/if}

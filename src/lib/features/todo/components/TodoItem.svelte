@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Todo } from '../todo.type';
 	import * as Card from '$lib/components/ui/card';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		CheckCircle2,
@@ -13,9 +12,7 @@
 		Repeat,
 		Flag,
 		FileText,
-		Plus,
-		Check,
-		X
+		Check
 	} from '@lucide/svelte';
 	import { todoState } from '$lib/features/todo';
 	import MetadataInput from '$lib/components/global/MetadataInput.svelte';
@@ -30,18 +27,27 @@
 	}: { todo: Todo; isExpanded?: boolean; class?: string } = $props();
 
 	const PREFIXES = {
-		notes: 'with note ',
-		dateTime: 'at ',
-		deadline: 'at deadline ',
-		repeat: 'on every ',
-		priority: 'on a priority '
+		notes: 'Notes:',
+		dateTime: 'Date/Time:',
+		deadline: 'Deadline:',
+		repeat: 'Repeat:',
+		priority: 'Priority:'
 	} as const;
 
 	type FieldKey = keyof typeof PREFIXES;
 
 	function formatDateTime(date?: string, time?: string): string {
 		if (!date) return '';
-		return time ? `${date} ${time}` : date;
+		const d = new Date(date);
+		const day = d.toLocaleDateString(undefined, {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
+		const timeStr = time
+			? d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+			: '';
+		return time ? `${day} ${timeStr}` : day;
 	}
 
 	type MetadataItem = {
@@ -53,67 +59,77 @@
 	};
 
 	function buildInitialMetadata(item: Todo): MetadataItem[] {
-		const list: MetadataItem[] = [];
-		if (item.notes) {
-			list.push({
+		const list: MetadataItem[] = [
+			{
 				field: 'notes',
-				value: item.notes,
+				value: item.notes || '',
 				input: null,
 				prefix: PREFIXES.notes,
 				placeHolder: 'add details or notes...'
-			});
-		}
-		if (item.startDate || item.startTime) {
-			list.push({
+			},
+			{
 				field: 'dateTime',
 				value: formatDateTime(item.startDate, item.startTime),
 				input: null,
 				prefix: PREFIXES.dateTime,
 				placeHolder: 'e.g. tomorrow 3pm'
-			});
-		}
-		if (item.dueDate || item.endTime) {
-			list.push({
+			},
+			{
 				field: 'deadline',
 				value: formatDateTime(item.dueDate, item.endTime),
 				input: null,
 				prefix: PREFIXES.deadline,
 				placeHolder: 'e.g. Friday 5pm'
-			});
-		}
-		if (item.interval) {
-			list.push({
+			},
+			{
 				field: 'repeat',
-				value: item.interval,
+				value: item.interval || '',
 				input: null,
 				prefix: PREFIXES.repeat,
-				placeHolder: 'e.g. daily, weekday, weekend'
-			});
-		}
-		if (item.priority) {
-			list.push({
+				placeHolder: 'e.g. day, weekday, weekend'
+			},
+			{
 				field: 'priority',
-				value: item.priority,
+				value: item.priority || '',
 				input: null,
 				prefix: PREFIXES.priority,
 				placeHolder: 'e.g. high, medium, or low'
-			});
-		}
-		return list;
+			}
+		];
+		// sort by filled value
+		return list.sort((a, b) => {
+			if (a.value && !b.value) return -1;
+			if (!a.value && b.value) return 1;
+			return 0;
+		});
 	}
 
 	// Card interaction state
 	let isSaving = $state(false);
 	let isEditingTitle = $state(false);
+	let showMore = $state(false);
 
 	// Form draft values
 	let title = $state(untrack(() => todo.title));
 	let titleInput = $state<HTMLInputElement | null>(null);
 	let metadata = $state<MetadataItem[]>(untrack(() => buildInitialMetadata(todo)));
+	let visibleMetadata = $derived.by(() => {
+		if (showMore) {
+			return metadata;
+		}
+		const filled = metadata.filter((m) => m.value).length;
+		return metadata.slice(0, filled <= 2 ? 2 : filled);
+	});
 
 	// Synchronize state when the todo prop updates externally (e.g. from database/store updates)
 	let lastUpdatedAt = $state(untrack(() => todo.updatedAt));
 	let lastTodoId = $state(untrack(() => todo.id));
+
+	$effect(() => {
+		if (!isExpanded) {
+			showMore = false;
+		}
+	});
 
 	$effect(() => {
 		// If the todo ID changed or external updatedAt changed while not actively editing, sync
@@ -242,6 +258,8 @@
 				toast.error(result.error);
 			} else if (result.data) {
 				lastUpdatedAt = result.data.updatedAt;
+				showMore = false;
+				metadata = buildInitialMetadata(result.data);
 			}
 		} finally {
 			isSaving = false;
@@ -265,13 +283,8 @@
 	async function handleCardClick(e: MouseEvent) {
 		e.stopPropagation();
 		const target = e.target as HTMLElement | null;
-		// Don't toggle if user clicked on button, dropdown, input, or interactive controls
-		if (
-			target?.closest('button') ||
-			target?.closest('input') ||
-			target?.closest('[data-dropdown-menu-content]') ||
-			target?.closest('[role="menuitem"]')
-		) {
+		// Don't toggle if user clicked on button, input, or interactive controls
+		if (target?.closest('button') || target?.closest('input')) {
 			return;
 		}
 
@@ -387,112 +400,66 @@
 		<!-- Expanded Content Section -->
 		{#if isExpanded}
 			<div class="flex animate-in flex-col gap-3 px-4 duration-150 fade-in-50">
-				<!-- Metadata items editor -->
-				<div class="flex flex-col gap-2">
-					{#if metadata.length > 0}
-						<div class="flex flex-wrap items-center gap-1.5">
-							{#each metadata as item (item.field)}
-								<div
-									class="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/70 px-2 py-1 text-xs text-muted-foreground transition-all hover:border-border"
-								>
-									{#if item.field === 'notes'}
-										<FileText size={12} class="shrink-0 text-primary/70" />
-									{:else if item.field === 'dateTime'}
-										<Calendar size={12} class="shrink-0 text-blue-500/80" />
-									{:else if item.field === 'deadline'}
-										<Clock size={12} class="shrink-0 text-amber-500/80" />
-									{:else if item.field === 'repeat'}
-										<Repeat size={12} class="shrink-0 text-emerald-500/80" />
-									{:else if item.field === 'priority'}
-										<Flag size={12} class="shrink-0 text-rose-500/80" />
-									{/if}
-
-									<MetadataInput
-										show={getShowState(item.field)}
-										field={item.field}
-										bind:value={item.value}
-										bind:input={item.input}
-										prefix={item.prefix}
-										placeHolder={item.placeHolder}
-										handleFieldInput={(value) => handleFieldInput(item.field, value)}
-										handleCreate={handleSave}
-										toggleField={() => toggleField(item.field)}
-										onblur={handleSave}
-									/>
-
-									<button
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation();
-											toggleField(item.field);
-										}}
-										class="ml-0.5 rounded-xs p-0.5 text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive"
-										title="Remove"
-									>
-										<X size={11} />
-									</button>
-								</div>
-							{/each}
-						</div>
-					{:else}
-						<p class="text-sm text-muted-foreground/70 italic">
-							No extra details yet. Click "Add Info" below to set due dates, notes, or priority.
+				<!-- created and completed at -->
+				<div class="flex w-full items-center gap-3 px-1.5 text-xs text-muted-foreground">
+					<p>
+						Created: {formatDateTime(todo.createdAt)}
+					</p>
+					{#if todo.completedAt}
+						<span>•</span>
+						<p>
+							Completed: {formatDateTime(todo.completedAt)}
 						</p>
 					{/if}
 				</div>
+				<!-- Metadata items editor -->
+				<div class="flex flex-col gap-1.5">
+					{#each visibleMetadata as item (item.field)}
+						<div
+							class="flex items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-all duration-300"
+						>
+							{#if item.field === 'notes'}
+								<FileText size={12} class="shrink-0 text-primary/70" />
+							{:else if item.field === 'dateTime'}
+								<Calendar size={12} class="shrink-0 text-blue-500/80" />
+							{:else if item.field === 'deadline'}
+								<Clock size={12} class="shrink-0 text-amber-500/80" />
+							{:else if item.field === 'repeat'}
+								<Repeat size={12} class="shrink-0 text-emerald-500/80" />
+							{:else if item.field === 'priority'}
+								<Flag size={12} class="shrink-0 text-rose-500/80" />
+							{/if}
+
+							<MetadataInput
+								show={getShowState(item.field)}
+								field={item.field}
+								bind:value={item.value}
+								bind:input={item.input}
+								prefix={item.prefix}
+								placeHolder={item.placeHolder}
+								handleFieldInput={(value) => handleFieldInput(item.field, value)}
+								handleCreate={handleSave}
+								toggleField={() => toggleField(item.field)}
+								onblur={handleSave}
+							/>
+						</div>
+					{/each}
+
+					<button
+						type="button"
+						onclick={() => (showMore = !showMore)}
+						class="mt-0.5 inline-flex w-fit items-center gap-1 rounded-md px-1 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+					>
+						<span>{showMore ? 'Show less' : 'See more'}</span>
+						<ChevronDown
+							size={12}
+							class="transition-transform duration-200 {showMore ? 'rotate-180' : ''}"
+						/>
+					</button>
+				</div>
 
 				<!-- Card Action Footer -->
-				<div class="flex items-center justify-between gap-2 pt-1">
-					<!-- Add Info Dropdown -->
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger>
-							<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-							{#snippet child({ props }: any)}
-								<Button
-									size="xs"
-									variant="outline"
-									class="h-7 gap-1 rounded-full text-xs"
-									{...props}
-								>
-									<Plus size={12} />
-									<span>Add Info</span>
-									<ChevronDown size={12} class="opacity-60" />
-								</Button>
-							{/snippet}
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="start" class="w-40">
-							<DropdownMenu.Group>
-								<DropdownMenu.Label class="text-xs font-semibold">Information</DropdownMenu.Label>
-								<DropdownMenu.Separator />
-								<DropdownMenu.Item onclick={() => toggleField('notes')} class="gap-2 text-xs">
-									<FileText size={13} class="text-muted-foreground" />
-									<span class="flex-1">Notes</span>
-									{#if getShowState('notes')}<Check size={13} class="text-primary" />{/if}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => toggleField('dateTime')} class="gap-2 text-xs">
-									<Calendar size={13} class="text-muted-foreground" />
-									<span class="flex-1">Date/Time</span>
-									{#if getShowState('dateTime')}<Check size={13} class="text-primary" />{/if}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => toggleField('deadline')} class="gap-2 text-xs">
-									<Clock size={13} class="text-muted-foreground" />
-									<span class="flex-1">Deadline</span>
-									{#if getShowState('deadline')}<Check size={13} class="text-primary" />{/if}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => toggleField('repeat')} class="gap-2 text-xs">
-									<Repeat size={13} class="text-muted-foreground" />
-									<span class="flex-1">Repeat todo</span>
-									{#if getShowState('repeat')}<Check size={13} class="text-primary" />{/if}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => toggleField('priority')} class="gap-2 text-xs">
-									<Flag size={13} class="text-muted-foreground" />
-									<span class="flex-1">Priority</span>
-									{#if getShowState('priority')}<Check size={13} class="text-primary" />{/if}
-								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-
+				<div class="flex items-center justify-end gap-2 pt-1">
 					<!-- Action Buttons -->
 					<div class="flex items-center gap-1.5">
 						<Button

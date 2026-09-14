@@ -8,10 +8,12 @@
 	const MAX_VISIBLE = 3;
 	let {
 		todos = [],
-		groupedTodos: propGroupedTodos
+		groupedTodos: propGroupedTodos,
+		isLoading = false
 	}: {
 		todos?: Todo[];
 		groupedTodos?: TodoDateGroup[];
+		isLoading?: boolean;
 	} = $props();
 
 	let grouped = $derived(propGroupedTodos ?? groupTodosByDate(todos));
@@ -50,8 +52,18 @@
 	}
 </script>
 
+{#if isLoading}
+	<p class="py-12 text-center text-sm text-muted-foreground/70">Loading todos...</p>
+{:else if !allTodos.length}
+	<div
+		class="flex w-full max-w-md flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/70 py-12 text-center text-muted-foreground"
+	>
+		<p class="text-sm font-medium text-foreground">No pending tasks</p>
+		<p class="text-xs text-muted-foreground">Create a new task to get started</p>
+	</div>
+{/if}
 <div
-	class="relative w-full py-1"
+	class="relative mx-auto w-full max-w-md animate-in py-1 duration-500 fade-in slide-in-from-bottom-4"
 	role="list"
 	aria-label="Today's todos"
 	onmouseenter={onMouseEnter}
@@ -76,9 +88,9 @@
 					<div class="flex items-center justify-between px-1 pb-1 text-sm text-muted-foreground">
 						<div class="flex items-center gap-1.5">
 							<Calendar size={16} class="text-primary" />
-							<span class="font-medium text-muted-foreground/80">{group.dateLabel}</span>
+							<span class="text-muted-foreground/70">{group.dateLabel}</span>
 							{#if group.formattedDate && group.dateLabel !== group.formattedDate}
-								<span class="font-normal text-muted-foreground/60">• {group.formattedDate}</span>
+								<span class="text-muted-foreground/70">• {group.formattedDate}</span>
 							{/if}
 						</div>
 						<span
@@ -126,7 +138,8 @@
 		<div
 			class="flex justify-center transition-all duration-300 ease-out {isListHovered
 				? 'pointer-events-none mt-0 max-h-0 opacity-0'
-				: 'mt-8 max-h-12 opacity-100'}"
+				: 'max-h-12 opacity-100'}"
+			style="margin-top: {allTodos.length * 12}px"
 		>
 			<button
 				class="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
@@ -135,7 +148,7 @@
 			</button>
 		</div>
 	{/if}
-	{#if !hasHidden}
+	{#if !hasHidden && allTodos.length}
 		<p
 			class="text-center text-sm text-muted-foreground/70 transition-all duration-300 ease-out {isListHovered
 				? 'pointer-events-none mt-0 max-h-0 opacity-0'

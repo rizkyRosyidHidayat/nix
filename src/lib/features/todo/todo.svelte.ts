@@ -54,10 +54,7 @@ export function groupTodosByDate(todos: Todo[]): TodoDateGroup[] {
 	const map = new SvelteMap<string, Todo[]>();
 
 	for (const todo of todos) {
-		const dateKey =
-			todo.dueDate ||
-			todo.startDate ||
-			(todo.createdAt ? todo.createdAt.split('T')[0] : '');
+		const dateKey = todo.createdAt ? todo.createdAt.split('T')[0] : '';
 
 		if (!map.has(dateKey)) {
 			map.set(dateKey, []);
@@ -90,14 +87,9 @@ function getDueDateTime(todo: Todo): number | null {
 function matchesDate(todo: Todo, targetDate: string): boolean {
 	if (!targetDate) return false;
 	const filterDate = new Date(targetDate).getTime();
-	const startDate = todo.startDate ? new Date(todo.startDate).getTime() : 0;
-	const dueDate = todo.dueDate ? new Date(todo.dueDate).getTime() : 0;
 	const createdDate = new Date(todo.createdAt.split('T')[0]).getTime();
-	return dueDate
-		? dueDate === filterDate
-		: startDate
-			? startDate === filterDate
-			: createdDate === filterDate;
+	const completedDate = todo.completedAt ? new Date(todo.completedAt.split('T')[0]).getTime() : null;
+	return completedDate ? completedDate === filterDate : createdDate === filterDate;
 }
 
 function formatDateStr(d: Date): string {
