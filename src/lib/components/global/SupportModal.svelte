@@ -39,8 +39,7 @@
 			</Card.Header>
 			<Card.Content>
 				<p class="mb-6 text-center text-muted-foreground">
-					If you feel helpful and want to support us, please consider giving a star or a tip. Thanks
-					for the support!
+					If you find Nix helpful, consider starring the repository or buying a coffee to support its development.
 				</p>
 
 				<div class="flex flex-col gap-3">
@@ -52,7 +51,7 @@
 						onclick={close}
 					>
 						<Coffee size={18} class="text-destructive" />
-						<span>Support Us</span>
+						<span>Buy us a coffee</span>
 					</a>
 					<a
 						href="https://github.com/rizkyRosyidHidayat/hinix"

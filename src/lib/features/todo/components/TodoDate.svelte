@@ -261,7 +261,7 @@
 			<!-- Week Navigation Bar -->
 			<div class="mb-2 flex items-center justify-between">
 				<div class="flex items-center gap-2 pl-1">
-					<h2 class="text-xs tracking-tight text-foreground">
+					<h2 class="text-sm tracking-tight text-foreground">
 						{currentWeek?.label}
 					</h2>
 					{#if selectedDate && selectedDate !== todayStr}
@@ -284,7 +284,7 @@
 						onclick={() => carouselApi?.scrollPrev()}
 						disabled={!canScrollPrev}
 						title="Previous week"
-						class="h-7 w-7 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronLeft size={16} />
 					</Button>
@@ -294,7 +294,7 @@
 						onclick={() => carouselApi?.scrollNext()}
 						disabled={!canScrollNext}
 						title="Next week"
-						class="h-7 w-7 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronRight size={16} />
 					</Button>
@@ -322,9 +322,9 @@
 										type="button"
 										disabled={!hasTodos}
 										onclick={() => selectDate(day.dateStr)}
-										class="group relative flex flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 pb-2.5 text-center transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-50
+										class="group relative flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-1 py-1.5 pb-2.5 text-center transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-50
 											{isCurrentSelected
-											? 'scale-[1.04] bg-primary font-semibold text-primary-foreground shadow-md'
+											? 'bg-primary font-semibold text-primary-foreground shadow-md'
 											: day.isToday && hasTodos
 												? `border border-primary/40 bg-primary/10 font-medium text-primary hover:bg-primary/20 dark:bg-primary/20`
 												: hasTodos
@@ -332,7 +332,7 @@
 													: 'text-muted-foreground/50'}"
 									>
 										<span
-											class="text-[10px] font-medium tracking-wider uppercase sm:text-xs {isCurrentSelected
+											class="text-xs font-medium tracking-wider uppercase sm:text-sm {isCurrentSelected
 												? 'text-primary-foreground/90'
 												: day.isToday && hasTodos
 													? 'text-primary/70 dark:text-primary'
@@ -342,7 +342,7 @@
 										>
 											{day.dayName}
 										</span>
-										<span class="text-xs font-semibold sm:text-sm">
+										<span class="text-xs font-semibold sm:text-base">
 											{day.dayNumber}
 										</span>
 									</button>
@@ -356,7 +356,7 @@
 	</Card.Root>
 	{#if !isSelected}
 		<p class="mt-4 text-center text-sm text-muted-foreground/70">
-			There is no todo items in the disabled date
+			Dates without tasks are disabled.
 		</p>
 	{/if}
 
@@ -372,17 +372,17 @@
 				class="mb-8 flex flex-col gap-2 rounded-2xl border border-border/70 bg-card p-3 shadow-md backdrop-blur-md"
 			>
 				<!-- Results Header -->
-				<div class="flex items-center justify-between px-1 pb-1 text-xs text-muted-foreground">
+				<div class="flex items-center justify-between px-1 pb-1 text-sm text-muted-foreground">
 					<span>
 						{dateTodos.isLoading
 							? 'Loading tasks...'
 							: dateTodos.data.length === 1
-								? '1 task found'
-								: `${dateTodos.data.length} tasks found`}
+								? '1 task scheduled'
+								: `${dateTodos.data.length} tasks scheduled`}
 					</span>
 					{#if formattedSelectedDate}
-						<span class="text-[11px] opacity-70">
-							Showing {formattedSelectedDate}
+						<span class="text-sm opacity-70">
+							{formattedSelectedDate}
 						</span>
 					{/if}
 				</div>
@@ -400,7 +400,7 @@
 							{#each dateTodos.data as todo (todo.id)}
 								<div class="w-full">
 									<TodoItem
-										class="border-border/50 shadow-none ring-0"
+										class="shadow-none ring-0"
 										{todo}
 										bind:isExpanded={expandedItems[todo.id]}
 									/>
@@ -412,8 +412,8 @@
 					<div
 						class="flex flex-col items-center justify-center gap-1.5 py-6 text-center text-muted-foreground"
 					>
-						<p class="text-xs font-medium text-foreground">No todos scheduled for this day</p>
-						<p class="text-[11px] text-muted-foreground">Select another date or create a task</p>
+						<p class="text-sm font-medium text-foreground">No tasks scheduled for this date</p>
+						<p class="text-xs text-muted-foreground">Choose another date or create a new task</p>
 					</div>
 				{/if}
 			</div>

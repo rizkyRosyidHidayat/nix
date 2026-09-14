@@ -60,7 +60,7 @@
 				value: item.notes,
 				input: null,
 				prefix: PREFIXES.notes,
-				placeHolder: 'input notes'
+				placeHolder: 'add details or notes...'
 			});
 		}
 		if (item.startDate || item.startTime) {
@@ -69,7 +69,7 @@
 				value: formatDateTime(item.startDate, item.startTime),
 				input: null,
 				prefix: PREFIXES.dateTime,
-				placeHolder: 'ex: tomorrow 3pm'
+				placeHolder: 'e.g. tomorrow 3pm'
 			});
 		}
 		if (item.dueDate || item.endTime) {
@@ -78,7 +78,7 @@
 				value: formatDateTime(item.dueDate, item.endTime),
 				input: null,
 				prefix: PREFIXES.deadline,
-				placeHolder: 'ex: tomorrow 3pm'
+				placeHolder: 'e.g. Friday 5pm'
 			});
 		}
 		if (item.interval) {
@@ -87,7 +87,7 @@
 				value: item.interval,
 				input: null,
 				prefix: PREFIXES.repeat,
-				placeHolder: 'day, weekday, or weekend'
+				placeHolder: 'e.g. daily, weekday, weekend'
 			});
 		}
 		if (item.priority) {
@@ -96,7 +96,7 @@
 				value: item.priority,
 				input: null,
 				prefix: PREFIXES.priority,
-				placeHolder: 'ex: high, medium, or low'
+				placeHolder: 'e.g. high, medium, or low'
 			});
 		}
 		return list;
@@ -172,19 +172,19 @@
 			let placeHolder = '';
 			switch (field) {
 				case 'notes':
-					placeHolder = 'input notes';
+					placeHolder = 'add details or notes...';
 					break;
 				case 'dateTime':
-					placeHolder = 'ex: tomorrow 3pm';
+					placeHolder = 'e.g. tomorrow at 3pm';
 					break;
 				case 'deadline':
-					placeHolder = 'ex: tomorrow 3pm';
+					placeHolder = 'e.g. Friday by 5pm';
 					break;
 				case 'repeat':
-					placeHolder = 'day, weekday, or weekend';
+					placeHolder = 'e.g. daily, weekday, weekend';
 					break;
 				case 'priority':
-					placeHolder = 'ex: high, medium, or low';
+					placeHolder = 'e.g. high, medium, or low';
 					break;
 			}
 			metadata.push({
@@ -346,7 +346,7 @@
 							handleSave();
 						}
 					}}
-					placeholder="Todo title..."
+					placeholder="Task title..."
 					class="w-full bg-transparent text-sm font-medium transition-colors outline-none {todo.isCompleted
 						? 'text-muted-foreground line-through'
 						: 'text-foreground'}"
@@ -359,7 +359,7 @@
 					size="icon-sm"
 					variant="ghost"
 					onclick={handleDelete}
-					title="Delete todo"
+					title="Delete task"
 					class="shrink-0 text-muted-foreground opacity-0 transition-all duration-200 group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive"
 				>
 					<Trash2 size={16} />
@@ -386,7 +386,7 @@
 
 		<!-- Expanded Content Section -->
 		{#if isExpanded}
-			<div class="flex animate-in flex-col gap-3 px-4 pt-2 duration-150 fade-in-50">
+			<div class="flex animate-in flex-col gap-3 px-4 duration-150 fade-in-50">
 				<!-- Metadata items editor -->
 				<div class="flex flex-col gap-2">
 					{#if metadata.length > 0}
@@ -435,7 +435,7 @@
 							{/each}
 						</div>
 					{:else}
-						<p class="text-xs text-muted-foreground/70 italic">
+						<p class="text-sm text-muted-foreground/70 italic">
 							No extra details yet. Click "Add Info" below to set due dates, notes, or priority.
 						</p>
 					{/if}

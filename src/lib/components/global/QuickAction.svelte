@@ -88,7 +88,7 @@
 						value: notesValue,
 						input: null,
 						prefix: PREFIXES.notes,
-						placeHolder: 'input notes'
+						placeHolder: 'add details or notes...'
 					});
 				}
 				break;
@@ -103,7 +103,7 @@
 						value: dateTimeValue,
 						input: null,
 						prefix: PREFIXES.dateTime,
-						placeHolder: 'ex: tomorrow 3pm'
+						placeHolder: 'e.g. tomorrow 3pm'
 					});
 				}
 				break;
@@ -118,7 +118,7 @@
 						value: deadlineValue,
 						input: null,
 						prefix: PREFIXES.deadline,
-						placeHolder: 'ex: tomorrow 3pm'
+						placeHolder: 'e.g. Friday 5pm'
 					});
 				}
 				break;
@@ -133,7 +133,7 @@
 						value: repeatValue,
 						input: null,
 						prefix: PREFIXES.repeat,
-						placeHolder: 'day, weekday, or weekend'
+						placeHolder: 'e.g. daily, weekday, weekend'
 					});
 				}
 				break;
@@ -148,7 +148,7 @@
 						value: priorityValue,
 						input: null,
 						prefix: PREFIXES.priority,
-						placeHolder: 'ex: high, medium, or low'
+						placeHolder: 'e.g. high, medium, or low'
 					});
 				}
 				break;
@@ -333,7 +333,7 @@
 							handleCreate();
 						}
 					}}
-					placeholder="Add your todo here..."
+					placeholder="Add a new task..."
 					class="outline-none placeholder:text-muted-foreground {hasTitle
 						? 'field-sizing-content'
 						: 'w-full'}"

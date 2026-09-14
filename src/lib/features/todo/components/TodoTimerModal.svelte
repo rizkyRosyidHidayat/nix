@@ -71,7 +71,7 @@
 						onclick={() => todoTimerState.snoozeActiveFor15Mins()}
 					>
 						<Clock size={16} />
-						Snooze
+						Snooze (15m)
 					</Button>
 				{/if}
 				<Button
@@ -79,7 +79,7 @@
 					class="gap-2 text-foreground"
 					onclick={() => todoTimerState.stopTimerForActive()}
 				>
-					Stop
+					Dismiss
 				</Button>
 			</Card.Footer>
 		</Card.Root>

@@ -81,7 +81,7 @@
 >
 	<!-- Search Input Card -->
 	<Card.Root
-		class="w-full py-3 transition-all duration-300 ease-out {isSelected
+		class="w-full py-4 transition-all duration-300 ease-out {isSelected
 			? 'border-primary/40 shadow-md ring-2 ring-primary/20 dark:ring-primary/50'
 			: 'backdrop-blur-sm'}"
 	>
@@ -95,7 +95,7 @@
 			<input
 				bind:this={inputRef}
 				type="text"
-				placeholder="Search all todos by title, note, or priority..."
+				placeholder="Search tasks by title, note, or priority..."
 				class="w-full bg-transparent text-sm font-medium tracking-tight text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
 				onfocus={handleFocus}
 				onkeydown={handleKeyDown}
@@ -128,13 +128,10 @@
 			class="absolute top-full mt-2 flex w-full flex-col gap-2 rounded-2xl border border-border/70 bg-card p-3 shadow-md backdrop-blur-md"
 		>
 			<!-- Results Header -->
-			<div class="flex items-center justify-between px-1 pb-1 text-xs text-muted-foreground">
+			<div class="flex items-center justify-between px-1 pb-1 text-sm text-muted-foreground">
 				<span>
 					{filteredTodos.length === 1 ? '1 task found' : `${filteredTodos.length} tasks found`}
 				</span>
-				{#if filteredTodos.length > 0}
-					<span class="text-[11px] opacity-70">Showing matching tasks</span>
-				{/if}
 			</div>
 
 			<!-- Results List -->
@@ -143,7 +140,7 @@
 					{#each filteredTodos as todo (todo.id)}
 						<div class="mb-2 w-full last:mb-0">
 							<TodoItem
-								class="border-border/50 shadow-none ring-0"
+								class="shadow-none ring-0"
 								{todo}
 								bind:isExpanded={expandedItems[todo.id]}
 							/>
@@ -154,8 +151,8 @@
 				<div
 					class="flex flex-col items-center justify-center gap-1.5 py-6 text-center text-muted-foreground"
 				>
-					<p class="text-xs font-medium text-foreground">No todos found matching "{search}"</p>
-					<p class="text-[11px] text-muted-foreground">Try searching with a different keyword</p>
+					<p class="text-sm font-medium text-foreground">No tasks found matching "{search}"</p>
+					<p class="text-sm text-muted-foreground">Try searching with different keywords</p>
 				</div>
 			{/if}
 		</div>

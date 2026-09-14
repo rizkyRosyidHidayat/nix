@@ -20,8 +20,8 @@
 <Card.Root class="w-full py-4">
 	<Card.Header class="flex flex-row items-center justify-between gap-4">
 		<div class="flex flex-col gap-1">
-			<Card.Title class="text-sm">Application Theme</Card.Title>
-			<p class="text-xs text-muted-foreground">
+			<Card.Title class="text-base">Application Theme</Card.Title>
+			<p class="text-sm text-muted-foreground">
 				Choose how the app looks. Current: <span class="font-medium text-foreground capitalize"
 					>{currentMode}</span
 				>
@@ -33,7 +33,7 @@
 				<Button
 					variant={isActive ? 'default' : 'ghost'}
 					size="sm"
-					class="h-7 gap-1.5 rounded-full px-3 text-xs font-normal transition-all duration-200 {isActive
+					class="gap-1.5 rounded-full px-3 text-xs font-normal transition-all duration-200 {isActive
 						? 'shadow-sm'
 						: 'hover:bg-muted'}"
 					onclick={() => handleSetTheme(option.value)}

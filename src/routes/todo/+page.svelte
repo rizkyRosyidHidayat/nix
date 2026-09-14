@@ -5,16 +5,16 @@
 </script>
 
 <svelte:head>
-	<title>Discover All Todos | Nix</title>
+	<title>Explore All Tasks | Nix</title>
 	<meta
 		name="description"
-		content="Explore and organize all your todos by date with an interactive weekly calendar."
+		content="Explore and organize all your tasks by date with an interactive weekly calendar."
 	/>
 </svelte:head>
 
 <Container>
 	<!-- Page Header -->
-	<h1 class="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">Discover all your todos</h1>
+	<h1 class="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">Explore all your tasks</h1>
 
 	<TodoSearch />
 
