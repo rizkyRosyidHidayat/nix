@@ -25,7 +25,7 @@
 	</Container>
 {:else if todos.length === 0}
 	<Container>
-		<h1 class="mb-2 text-center text-3xl font-bold">Hello, let's add your first todo</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold">Hello, add your first todo</h1>
 		<QuickAction />
 		<p class="text-center text-xs text-muted-foreground/50">
 			Nix is an application for managing todo

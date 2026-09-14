@@ -348,7 +348,7 @@
 		</Card.Content>
 	</Card.Root>
 	<p class="mt-4 px-2 text-center text-xs text-muted-foreground/50">
-		The disabled date because there is no todo items
+		There is no todo items in the disabled date
 	</p>
 
 	<!-- Date Results Dropdown -->
