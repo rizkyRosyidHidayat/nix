@@ -35,7 +35,6 @@
 
 	function gotoPending() {
 		goto(resolve('/todo'));
-		clearCreatedState();
 	}
 </script>
 

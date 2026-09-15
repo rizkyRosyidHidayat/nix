@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Todo } from '../todo.type';
+	import { TodoStatus, type Todo } from '../todo.type';
 	import * as Card from '$lib/components/ui/card';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		CheckCircle2,
@@ -17,6 +18,7 @@
 	import { todoState } from '$lib/features/todo';
 	import MetadataInput from '$lib/components/global/MetadataInput.svelte';
 	import { tick, untrack } from 'svelte';
+	import { SvelteDate } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import { clickOutside } from '$lib/utils';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
@@ -39,7 +41,7 @@
 
 	function formatDateTime(date?: string, time?: string): string {
 		if (!date) return '';
-		const d = new Date(date);
+		const d = new Date(`${date}T${time || '00:00'}`);
 		const day = d.toLocaleDateString(undefined, {
 			day: 'numeric',
 			month: 'short',
@@ -244,6 +246,54 @@
 		}
 	}
 
+	const STATUS_CONFIG: Record<TodoStatus, { label: string; dotClass: string }> = {
+		[TodoStatus.pending]: {
+			label: 'Pending',
+			dotClass: 'bg-muted-foreground'
+		},
+		[TodoStatus.inProgress]: {
+			label: 'In Progress',
+			dotClass: 'bg-blue-500'
+		},
+		[TodoStatus.done]: {
+			label: 'Done',
+			dotClass: 'bg-emerald-500'
+		},
+		[TodoStatus.overdue]: {
+			label: 'Overdue',
+			dotClass: 'bg-destructive'
+		}
+	};
+
+	const statusOptions = $derived.by(() => {
+		return (
+			Object.values(TodoStatus)
+				.filter((status) => status !== todo.status)
+				// Hide 'overdue' option if todo is not overdue
+				.filter(
+					(status) =>
+						(todo.dueDate &&
+							!todo.isCompleted &&
+							new SvelteDate(todo.dueDate).getTime() < new SvelteDate().getTime()) ||
+						status !== TodoStatus.overdue
+				)
+				.map((status) => ({
+					value: status,
+					label: STATUS_CONFIG[status].label,
+					dotClass: STATUS_CONFIG[status].dotClass
+				}))
+		);
+	});
+
+	async function handleUpdateStatus(newStatus: TodoStatus) {
+		const isDone = newStatus === TodoStatus.done;
+		await todoState.update(todo.id, {
+			status: newStatus,
+			isCompleted: isDone,
+			completedAt: isDone ? new SvelteDate().toISOString() : undefined
+		});
+	}
+
 	async function handleDelete(e?: MouseEvent) {
 		e?.stopPropagation();
 		await todoState.delete(todo.id);
@@ -252,8 +302,13 @@
 	async function handleCardClick(e: MouseEvent) {
 		e.stopPropagation();
 		const target = e.target as HTMLElement | null;
-		// Don't toggle if user clicked on button, input, or interactive controls
-		if (target?.closest('button') || target?.closest('input')) {
+		// Don't toggle if user clicked on button, input, dropdown or interactive controls
+		if (
+			target?.closest('button') ||
+			target?.closest('input') ||
+			target?.closest('[data-dropdown-menu-content]') ||
+			target?.closest('[role="menuitem"]')
+		) {
 			return;
 		}
 
@@ -430,7 +485,44 @@
 				</div>
 
 				<!-- Card Action Footer -->
-				<div class="flex items-center justify-end gap-2 pt-1">
+				<div class="flex items-center justify-between gap-2 border-t pt-3">
+					<!-- Status Dropdown -->
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
+							{#snippet child({ props }: any)}
+								{@const statusKey =
+									todo.status || (todo.isCompleted ? TodoStatus.done : TodoStatus.pending)}
+								{@const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG[TodoStatus.pending]}
+								<Button
+									variant="outline"
+									size="xs"
+									class="h-7 gap-1.5 rounded-full px-2.5 text-xs capitalize"
+									{...props}
+								>
+									<span class="size-1.5 rounded-full {config.dotClass}"></span>
+									<span>{config.label}</span>
+									<ChevronDown size={11} class="opacity-60" />
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start" class="w-36" preventScroll={false}>
+							<DropdownMenu.Group>
+								<DropdownMenu.Label class="text-xs font-semibold">Status</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								{#each statusOptions as option (option.value)}
+									<DropdownMenu.Item
+										onclick={() => handleUpdateStatus(option.value)}
+										class="gap-2 text-xs"
+									>
+										<span class="size-1.5 rounded-full {option.dotClass}"></span>
+										<span class="flex-1">{option.label}</span>
+									</DropdownMenu.Item>
+								{/each}
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+
 					<!-- Action Buttons -->
 					<div class="flex items-center gap-1.5">
 						<Button

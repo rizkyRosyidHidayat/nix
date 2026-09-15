@@ -394,9 +394,13 @@
 	<div
 		role="presentation"
 		aria-hidden="true"
+		data-backdrop="todo-date"
 		class="fixed inset-0 z-40 bg-background/60 backdrop-blur-xs transition-all duration-300"
 		transition:fade={{ duration: 200 }}
-		onclick={onClose}
+		onclick={(e) => {
+			e.stopPropagation();
+			onClose();
+		}}
 	></div>
 {/if}
 
