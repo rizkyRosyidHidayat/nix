@@ -32,6 +32,13 @@
 	let repeatValue = $state('');
 	let priorityValue = $state('');
 
+	// input refs
+	let notesInput = $state<HTMLInputElement | null>(null);
+	let dateTimeInput = $state<HTMLInputElement | null>(null);
+	let deadlineInput = $state<HTMLInputElement | null>(null);
+	let repeatInput = $state<HTMLInputElement | null>(null);
+	let priorityInput = $state<HTMLInputElement | null>(null);
+
 	// Visibility toggles
 	let showNotes = $state(false);
 	let showDateTime = $state(false);
@@ -75,6 +82,7 @@
 
 	async function toggleField(field: FieldKey) {
 		const isCurrentlyShown = getShowState(field);
+		const orderBeforeToggle: ('title' | FieldKey)[] = ['title', ...metadata.map((m) => m.field)];
 
 		switch (field) {
 			case 'notes':
@@ -86,7 +94,7 @@
 					metadata.push({
 						field: 'notes',
 						value: notesValue,
-						input: null,
+						input: notesInput,
 						prefix: PREFIXES.notes,
 						placeHolder: 'add details or notes...'
 					});
@@ -101,7 +109,7 @@
 					metadata.push({
 						field: 'dateTime',
 						value: dateTimeValue,
-						input: null,
+						input: dateTimeInput,
 						prefix: PREFIXES.dateTime,
 						placeHolder: 'e.g. tomorrow 3pm'
 					});
@@ -116,7 +124,7 @@
 					metadata.push({
 						field: 'deadline',
 						value: deadlineValue,
-						input: null,
+						input: deadlineInput,
 						prefix: PREFIXES.deadline,
 						placeHolder: 'e.g. Friday 5pm'
 					});
@@ -131,7 +139,7 @@
 					metadata.push({
 						field: 'repeat',
 						value: repeatValue,
-						input: null,
+						input: repeatInput,
 						prefix: PREFIXES.repeat,
 						placeHolder: 'e.g. day, weekday, weekend'
 					});
@@ -146,7 +154,7 @@
 					metadata.push({
 						field: 'priority',
 						value: priorityValue,
-						input: null,
+						input: priorityInput,
 						prefix: PREFIXES.priority,
 						placeHolder: 'e.g. high, medium, or low'
 					});
@@ -162,30 +170,34 @@
 				inputRef.focus();
 			}
 		} else {
-			focusPreviousInput(field);
+			await focusPreviousInput(field, orderBeforeToggle);
 		}
 	}
 
-	function focusPreviousInput(currentField: FieldKey) {
-		const order: ('title' | FieldKey)[] = [
-			'title',
-			'notes',
-			'dateTime',
-			'deadline',
-			'repeat',
-			'priority'
-		];
+	async function focusPreviousInput(
+		currentField: FieldKey,
+		customOrder?: ('title' | FieldKey)[]
+	) {
+		const order: ('title' | FieldKey)[] =
+			customOrder ?? ['title', ...metadata.map((m) => m.field)];
 		const currentIndex = order.indexOf(currentField);
 
 		for (let i = currentIndex - 1; i >= 0; i--) {
 			const field = order[i];
 			if (field === 'title') {
 				titleInput?.focus();
+				if (titleInput) {
+					const len = titleInput.value.length;
+					titleInput.setSelectionRange(len, len);
+				}
 				return;
 			}
-			if (getShowState(field as FieldKey)) {
-				const inputRef = getInputRef(field as FieldKey);
-				inputRef?.focus();
+			await tick();
+			const inputRef = getInputRef(field as FieldKey);
+			if (inputRef) {
+				inputRef.focus();
+				const len = inputRef.value.length;
+				inputRef.setSelectionRange(len, len);
 				return;
 			}
 		}
@@ -195,7 +207,7 @@
 		return metadata.find((m) => m.field === field)?.input ?? null;
 	}
 
-	function handleFieldInput(field: FieldKey, value: string) {
+	async function handleFieldInput(field: FieldKey, value: string) {
 		switch (field) {
 			case 'notes':
 				notesValue = value;
@@ -220,6 +232,8 @@
 		}
 
 		if (value === '') {
+			const orderBeforeRemove: ('title' | FieldKey)[] = ['title', ...metadata.map((m) => m.field)];
+
 			// User backspaced past prefix — auto-remove
 			switch (field) {
 				case 'notes':
@@ -248,7 +262,8 @@
 					metadata = metadata.filter((m) => m.field !== 'priority');
 					break;
 			}
-			focusPreviousInput(field);
+
+			await focusPreviousInput(field, orderBeforeRemove);
 		}
 	}
 
