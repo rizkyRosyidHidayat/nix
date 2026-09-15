@@ -414,7 +414,7 @@
 					variant="ghost"
 					onclick={toggleExpand}
 					title={isExpanded ? 'Collapse' : 'Expand details'}
-					class="relative shrink-0 text-muted-foreground transition-transform duration-200 hover:bg-card/70 hover:text-foreground"
+					class="relative shrink-0 text-muted-foreground transition-transform duration-200 hover:bg-muted/80 hover:text-foreground"
 				>
 					<ChevronDown
 						size={16}

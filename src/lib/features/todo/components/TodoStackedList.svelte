@@ -8,12 +8,10 @@
 	const MAX_VISIBLE = 3;
 	let {
 		todos = [],
-		groupedTodos: propGroupedTodos,
-		isLoading = false
+		groupedTodos: propGroupedTodos
 	}: {
 		todos?: Todo[];
 		groupedTodos?: TodoDateGroup[];
-		isLoading?: boolean;
 	} = $props();
 
 	let grouped = $derived(propGroupedTodos ?? groupTodosByDate(todos));
@@ -52,9 +50,7 @@
 	}
 </script>
 
-{#if isLoading}
-	<p class="py-12 text-center text-sm text-muted-foreground">Loading todos...</p>
-{:else if !allTodos.length}
+{#if !allTodos.length}
 	<div
 		class="flex w-full max-w-md flex-col items-center justify-center gap-1.5 rounded-2xl bg-card/20 py-12 text-center text-muted-foreground ring-1 ring-background/30"
 	>

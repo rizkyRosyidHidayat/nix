@@ -503,7 +503,7 @@
 													: day.isToday
 														? 'border border-muted-foreground/30 font-medium text-foreground'
 														: hasTodos
-															? 'bg-card font-medium text-foreground'
+															? 'bg-muted/80 font-medium text-foreground'
 															: day.isCurrentMonth
 																? 'text-muted-foreground/50'
 																: 'text-muted-foreground/20'}"
