@@ -56,7 +56,7 @@
 	<p class="py-12 text-center text-sm text-muted-foreground">Loading todos...</p>
 {:else if !allTodos.length}
 	<div
-		class="flex w-full max-w-md flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/70 py-12 text-center text-muted-foreground"
+		class="flex w-full max-w-md flex-col items-center justify-center gap-1.5 rounded-2xl bg-card/20 py-12 text-center text-muted-foreground ring-1 ring-background/30"
 	>
 		<p class="text-sm font-medium text-foreground">No pending tasks</p>
 		<p class="text-xs text-muted-foreground">Create a new task to get started</p>
