@@ -45,10 +45,10 @@
 {:else if state === 'success'}
 	<Container>
 		<h1 class="text-center text-3xl font-bold">You're all set! Let's get things done.</h1>
-		<div class="flex items-center gap-4">
-			<Button onclick={clearCreatedState} variant="outline">Add more todo</Button>
-			<Button onclick={gotoPending}>See pending tasks</Button>
-		</div>
+		<Button onclick={gotoPending} class="rounded-full">See pending tasks</Button>
+		<Button variant="link" onclick={clearCreatedState} class="text-muted-foreground"
+			>Back to add</Button
+		>
 	</Container>
 {:else}
 	<Container>

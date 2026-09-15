@@ -142,7 +142,7 @@
 			style="margin-top: {allTodos.length * 12}px"
 		>
 			<button
-				class="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+				class="inline-flex items-center gap-1.5 rounded-full bg-card/50 px-3 py-1 text-xs text-muted-foreground ring-1 ring-background/60 backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
 			>
 				<span>+{hiddenCount} more</span>
 			</button>

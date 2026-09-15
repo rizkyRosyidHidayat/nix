@@ -174,12 +174,8 @@
 		}
 	}
 
-	async function focusPreviousInput(
-		currentField: FieldKey,
-		customOrder?: ('title' | FieldKey)[]
-	) {
-		const order: ('title' | FieldKey)[] =
-			customOrder ?? ['title', ...metadata.map((m) => m.field)];
+	async function focusPreviousInput(currentField: FieldKey, customOrder?: ('title' | FieldKey)[]) {
+		const order: ('title' | FieldKey)[] = customOrder ?? ['title', ...metadata.map((m) => m.field)];
 		const currentIndex = order.indexOf(currentField);
 
 		for (let i = currentIndex - 1; i >= 0; i--) {
@@ -417,7 +413,9 @@
 					class="transition-opacity duration-200 ease-in {hasTitle ? 'opacity-100' : 'opacity-0'}"
 					>Enter</Kbd
 				>
-				<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save</Button>
+				<Button size="sm" disabled={!hasTitle} onclick={handleCreate} class="rounded-full"
+					>Save</Button
+				>
 			</div>
 		</div>
 	</Card.Content>
