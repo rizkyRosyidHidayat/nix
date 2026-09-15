@@ -8,7 +8,7 @@ export class Database extends Dexie {
     super('hinix');
 
     this.version(1).stores({
-      todos: 'id, title, isCompleted, createdAt, updatedAt, startDate, startTime, dueTime, endTime, interval, notes, priority'
+      todos: 'id, title, isCompleted, status, createdAt, updatedAt, startDate, startTime, dueTime, endTime, interval, notes, priority'
     });
   }
 }
