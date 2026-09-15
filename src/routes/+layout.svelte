@@ -8,6 +8,7 @@
 	import SupportModal from '$lib/components/global/SupportModal.svelte';
 	import TodoTimerModal from '$lib/features/todo/components/TodoTimerModal.svelte';
 	import { todoTimerState } from '$lib/features/todo/todo.timer.svelte';
+	import AmbientBackground from '$lib/components/global/AmbientBackground.svelte';
 
 	let { children } = $props();
 
@@ -20,6 +21,7 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ModeWatcher defaultMode="light" />
 <Toaster position="top-center" duration={3000} />
+<AmbientBackground />
 <Header />
 {@render children()}
 <Navigation />

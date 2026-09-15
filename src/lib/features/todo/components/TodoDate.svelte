@@ -576,9 +576,7 @@
 	</Card.Root>
 
 	{#if !isSelected}
-		<p class="mt-4 text-center text-sm text-muted-foreground/70">
-			Dates without tasks are disabled.
-		</p>
+		<p class="mt-4 text-center text-sm text-muted-foreground">Dates without tasks are disabled.</p>
 	{/if}
 
 	<!-- Date Results Dropdown -->
@@ -621,7 +619,7 @@
 							{#each dateTodos.data as todo (todo.id)}
 								<div class="w-full">
 									<TodoItem
-										class="shadow-none ring-0"
+										class="border shadow-none ring-0"
 										{todo}
 										bind:isExpanded={expandedItems[todo.id]}
 									/>

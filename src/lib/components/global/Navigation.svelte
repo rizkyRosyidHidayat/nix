@@ -61,7 +61,7 @@
 	<div
 		role="navigation"
 		aria-label="Main Navigation"
-		class="flex rounded-3xl border bg-card"
+		class="flex rounded-3xl bg-card/70 ring-1 ring-background/80 backdrop-blur-md"
 		onmouseenter={() => (isHovered = true)}
 		onmouseleave={() => (isHovered = false)}
 	>

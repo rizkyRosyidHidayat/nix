@@ -41,7 +41,8 @@
 
 	function formatDateTime(date?: string, time?: string): string {
 		if (!date) return '';
-		const d = new Date(`${date}T${time || '00:00'}`);
+
+		const d = new Date(date.split('T').length > 1 ? date : `${date}T${time || '00:00'}`);
 		const day = d.toLocaleDateString(undefined, {
 			day: 'numeric',
 			month: 'short',
@@ -336,9 +337,9 @@
 	use:clickOutside={() => (isExpanded = false)}
 >
 	<Card.Root
-		class="relative overflow-hidden border transition-all duration-200
+		class="relative overflow-hidden transition-all duration-200
 			{isExpanded
-			? 'gap-3 border-primary/40 py-3.5 shadow-none ring-2 ring-primary/20 dark:ring-primary/50'
+			? 'gap-3 py-3.5 shadow-none ring-2 ring-primary/20 dark:ring-primary/50'
 			: 'cursor-pointer gap-0 py-3'}
 			{className}
 		"

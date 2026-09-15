@@ -54,7 +54,7 @@
 	<Container>
 		<h1 class="mb-2 text-center text-3xl font-bold">What do you want to do?</h1>
 		<QuickAction />
-		<p class="text-center text-sm text-muted-foreground/70">
+		<p class="text-center text-sm text-muted-foreground">
 			Nix is your simple, local-first task manager.
 		</p>
 	</Container>

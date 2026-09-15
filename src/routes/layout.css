@@ -146,3 +146,115 @@
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--color-zinc-500);
 }
+
+/* Ambient background moving color animations */
+@keyframes orb-float-1 {
+	0%, 100% {
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+	33% {
+		transform: translate3d(130px, 70px, 0) scale(1.12);
+	}
+	66% {
+		transform: translate3d(-70px, 110px, 0) scale(0.92);
+	}
+}
+
+@keyframes orb-float-2 {
+	0%, 100% {
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+	33% {
+		transform: translate3d(-150px, 90px, 0) scale(0.9);
+	}
+	66% {
+		transform: translate3d(-60px, -70px, 0) scale(1.14);
+	}
+}
+
+@keyframes orb-float-3 {
+	0%, 100% {
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+	33% {
+		transform: translate3d(150px, -90px, 0) scale(1.1);
+	}
+	66% {
+		transform: translate3d(-100px, 60px, 0) scale(0.95);
+	}
+}
+
+@keyframes orb-float-4 {
+	0%, 100% {
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+	33% {
+		transform: translate3d(-110px, -80px, 0) scale(1.16);
+	}
+	66% {
+		transform: translate3d(90px, 60px, 0) scale(0.9);
+	}
+}
+
+@keyframes color-shift {
+	0%, 100% {
+		filter: hue-rotate(0deg);
+	}
+	50% {
+		filter: hue-rotate(30deg);
+	}
+}
+
+.animate-orb-1 {
+	animation: orb-float-1 14s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-orb-2 {
+	animation: orb-float-2 16s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-orb-3 {
+	animation: orb-float-3 18s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-orb-4 {
+	animation: orb-float-4 15s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-color-shift {
+	animation: color-shift 22s ease-in-out infinite;
+}
+
+/* Backwards-compatible aliases */
+.animate-float-slow {
+	animation: orb-float-1 14s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-float-reverse {
+	animation: orb-float-2 16s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-pulse-glow {
+	animation: orb-float-3 18s ease-in-out infinite;
+	will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-orb-1,
+	.animate-orb-2,
+	.animate-orb-3,
+	.animate-orb-4,
+	.animate-color-shift,
+	.animate-float-slow,
+	.animate-float-reverse,
+	.animate-pulse-glow {
+		animation: none;
+	}
+}
+

@@ -53,7 +53,7 @@
 </script>
 
 {#if isLoading}
-	<p class="py-12 text-center text-sm text-muted-foreground/70">Loading todos...</p>
+	<p class="py-12 text-center text-sm text-muted-foreground">Loading todos...</p>
 {:else if !allTodos.length}
 	<div
 		class="flex w-full max-w-md flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/70 py-12 text-center text-muted-foreground"
@@ -85,12 +85,12 @@
 						? 'max-h-8 translate-y-0 opacity-100'
 						: 'pointer-events-none max-h-0 -translate-y-2 opacity-0'}"
 				>
-					<div class="flex items-center justify-between px-1 pb-1 text-sm text-muted-foreground">
+					<div class="flex items-center justify-between px-1 pb-1 text-sm">
 						<div class="flex items-center gap-1.5">
 							<Calendar size={16} class="text-primary" />
-							<span class="text-muted-foreground/70">{group.dateLabel}</span>
+							<span class="text-muted-foreground">{group.dateLabel}</span>
 							{#if group.formattedDate && group.dateLabel !== group.formattedDate}
-								<span class="text-muted-foreground/70">• {group.formattedDate}</span>
+								<span class="text-muted-foreground">• {group.formattedDate}</span>
 							{/if}
 						</div>
 						<span
@@ -150,7 +150,7 @@
 	{/if}
 	{#if !hasHidden && allTodos.length}
 		<p
-			class="text-center text-sm text-muted-foreground/70 transition-all duration-300 ease-out {isListHovered
+			class="text-center text-sm text-muted-foreground transition-all duration-300 ease-out {isListHovered
 				? 'pointer-events-none mt-0 max-h-0 opacity-0'
 				: 'max-h-8 opacity-100'}"
 			style="margin-top: {allTodos.length * 12}px"

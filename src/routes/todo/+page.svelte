@@ -43,7 +43,7 @@
 <Container>
 	<!-- Page Header -->
 	<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Explore all your tasks</h1>
-	<div class="flex items-center gap-0.5 rounded-full border border-border/60 bg-muted/50 p-0.5">
+	<div class="flex items-center gap-0.5 rounded-full bg-card/50 p-0.5 ring-1 ring-background/60">
 		{#each tabs as option (option.value)}
 			{@const isActive = tab === option.value}
 			<Button
