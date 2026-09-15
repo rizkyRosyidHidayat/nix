@@ -27,7 +27,7 @@
 				>
 			</p>
 		</div>
-		<div class="flex items-center gap-0.5 rounded-full border border-border/60 bg-muted/50 p-0.5">
+		<div class="flex items-center gap-0.5 rounded-full border bg-card p-0.5">
 			{#each themeOptions as option (option.value)}
 				{@const isActive = currentMode === option.value}
 				<Button
