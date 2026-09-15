@@ -5,7 +5,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { type CarouselAPI } from '$lib/components/ui/carousel/context';
 	import { Button } from '$lib/components/ui/button';
-	import { ChevronLeft, ChevronRight, RotateCcw } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, ChevronDown, RotateCcw } from '@lucide/svelte';
 	import { SvelteDate, SvelteSet } from 'svelte/reactivity';
 	import TodoItem from './TodoItem.svelte';
 	import { fade, fly } from 'svelte/transition';
@@ -51,12 +51,28 @@
 		return `${year}-${month}-${day}`;
 	}
 
+	function getMonday(d: Date): Date {
+		const date = new SvelteDate(d.getFullYear(), d.getMonth(), d.getDate());
+		const day = date.getDay();
+		const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+		return new Date(date.setDate(diff));
+	}
+
 	interface DayItem {
 		dateStr: string;
 		dayNumber: number;
 		dayName: string;
 		isToday: boolean;
 		isCurrentMonth: boolean;
+		month: number;
+		year: number;
+	}
+
+	interface WeekItem {
+		id: string;
+		days: DayItem[];
+		label: string;
+		monthName: string;
 		month: number;
 		year: number;
 	}
@@ -73,7 +89,55 @@
 
 	const now = new SvelteDate();
 	const todayStr = formatLocalDate(now);
+	const baseMonday = getMonday(now);
 
+	// Week Generation
+	const TOTAL_PAST_WEEKS = 26;
+	const TOTAL_FUTURE_WEEKS = 26;
+	const currentWeekIndex = TOTAL_PAST_WEEKS;
+
+	function generateWeeks(): WeekItem[] {
+		const list: WeekItem[] = [];
+		for (let offset = -TOTAL_PAST_WEEKS; offset <= TOTAL_FUTURE_WEEKS; offset++) {
+			const monday = new Date(baseMonday.getTime() + offset * 7 * 86400000);
+			const days: DayItem[] = [];
+
+			for (let d = 0; d < 7; d++) {
+				const dayDate = new Date(monday.getTime() + d * 86400000);
+				const dateStr = formatLocalDate(dayDate);
+				days.push({
+					dateStr,
+					dayNumber: dayDate.getDate(),
+					dayName: DAY_NAMES[d],
+					isToday: dateStr === todayStr,
+					isCurrentMonth: true,
+					month: dayDate.getMonth(),
+					year: dayDate.getFullYear()
+				});
+			}
+
+			const firstDay = days[0];
+			const lastDay = days[6];
+			let label: string;
+			if (firstDay.month === lastDay.month) {
+				label = `${MONTH_NAMES[firstDay.month]} ${firstDay.year}`;
+			} else {
+				label = `${SHORT_MONTH_NAMES[firstDay.month]} - ${SHORT_MONTH_NAMES[lastDay.month]} ${lastDay.year}`;
+			}
+
+			list.push({
+				id: `week-${firstDay.dateStr}`,
+				days,
+				label,
+				monthName: MONTH_NAMES[firstDay.month],
+				month: firstDay.month,
+				year: firstDay.year
+			});
+		}
+		return list;
+	}
+
+	// Month Generation
 	const TOTAL_PAST_MONTHS = 24;
 	const TOTAL_FUTURE_MONTHS = 24;
 	const currentMonthIndex = TOTAL_PAST_MONTHS;
@@ -159,22 +223,34 @@
 		return list;
 	}
 
+	const weeks = generateWeeks();
 	const months = generateMonths();
 
 	// State
+	let isMonthView = $state(false);
 	let isSelected = $state(false);
 	let selectedDate = $state<string>('');
-	let carouselApi = $state<CarouselAPI>();
+
+	// Carousel states
+	let weekCarouselApi = $state<CarouselAPI>();
+	let monthCarouselApi = $state<CarouselAPI>();
+	let activeWeekIndex = $state<number>(currentWeekIndex);
 	let activeMonthIndex = $state<number>(currentMonthIndex);
-	let canScrollPrev = $state<boolean>(true);
-	let canScrollNext = $state<boolean>(true);
+	let canScrollPrevWeek = $state<boolean>(true);
+	let canScrollNextWeek = $state<boolean>(true);
+	let canScrollPrevMonth = $state<boolean>(true);
+	let canScrollNextMonth = $state<boolean>(true);
+
 	let expandedItems = $state<Record<string, boolean>>({});
 	let dropdownRef = $state<HTMLDivElement | null>(null);
 
 	let dateTodos = $derived(todoState.todosByDate);
 
-	// Derived
+	// Derived current items
+	let currentWeek = $derived(weeks[activeWeekIndex] || weeks[currentWeekIndex]);
 	let currentMonth = $derived(months[activeMonthIndex] || months[currentMonthIndex]);
+
+	let currentLabel = $derived(isMonthView ? currentMonth?.label : currentWeek?.label);
 
 	let formattedSelectedDate = $derived.by(() => {
 		if (!selectedDate) return '';
@@ -209,9 +285,41 @@
 	async function jumpToToday() {
 		selectedDate = todayStr;
 		isSelected = true;
-		carouselApi?.scrollTo(currentMonthIndex);
+		if (isMonthView) {
+			monthCarouselApi?.scrollTo(currentMonthIndex);
+			activeMonthIndex = currentMonthIndex;
+		} else {
+			weekCarouselApi?.scrollTo(currentWeekIndex);
+			activeWeekIndex = currentWeekIndex;
+		}
 		await tick();
 		scrollToDropdown();
+	}
+
+	async function toggleMonthView() {
+		isMonthView = !isMonthView;
+		await tick();
+		if (isMonthView) {
+			const targetDateStr = selectedDate || (currentWeek?.days[0]?.dateStr ?? todayStr);
+			const [y, m] = targetDateStr.split('-').map(Number);
+			const monthIdx = months.findIndex((mItem) => mItem.year === y && mItem.month === m - 1);
+			if (monthIdx !== -1) {
+				monthCarouselApi?.scrollTo(monthIdx);
+				activeMonthIndex = monthIdx;
+			}
+		} else {
+			const targetDateStr = selectedDate || todayStr;
+			const targetMs = new Date(targetDateStr).getTime();
+			const weekIdx = weeks.findIndex((w) => {
+				const startMs = new Date(w.days[0].dateStr).getTime();
+				const endMs = new Date(w.days[6].dateStr).getTime();
+				return targetMs >= startMs && targetMs <= endMs;
+			});
+			if (weekIdx !== -1) {
+				weekCarouselApi?.scrollTo(weekIdx);
+				activeWeekIndex = weekIdx;
+			}
+		}
 	}
 
 	function onClose() {
@@ -228,7 +336,11 @@
 	let datesWithTodos = $derived.by(() => {
 		const dates = new SvelteSet<string>();
 		for (const todo of todoState.todos.data) {
-			const targetDate = todo.createdAt ? todo.createdAt.split('T')[0] : '';
+			const targetDate = todo.completedAt
+				? todo.completedAt.split('T')[0]
+				: todo.createdAt
+					? todo.createdAt.split('T')[0]
+					: '';
 			if (targetDate) {
 				dates.add(targetDate);
 			}
@@ -258,13 +370,23 @@
 		}
 	});
 
-	function handleCarouselInit(api: CarouselAPI | undefined) {
-		carouselApi = api;
+	function handleWeekCarouselInit(api: CarouselAPI | undefined) {
+		weekCarouselApi = api;
+		if (!api) return;
+		api.on('select', () => {
+			activeWeekIndex = api.selectedScrollSnap();
+			canScrollPrevWeek = api.canScrollPrev();
+			canScrollNextWeek = api.canScrollNext();
+		});
+	}
+
+	function handleMonthCarouselInit(api: CarouselAPI | undefined) {
+		monthCarouselApi = api;
 		if (!api) return;
 		api.on('select', () => {
 			activeMonthIndex = api.selectedScrollSnap();
-			canScrollPrev = api.canScrollPrev();
-			canScrollNext = api.canScrollNext();
+			canScrollPrevMonth = api.canScrollPrev();
+			canScrollNextMonth = api.canScrollNext();
 		});
 	}
 </script>
@@ -288,20 +410,20 @@
 		? 'z-50'
 		: 'z-10'}"
 >
-	<!-- Monthly Calendar Carousel Card -->
+	<!-- Date Carousel Card (Week by default, expandable to Month) -->
 	<Card.Root
 		class="w-full py-3 transition-all duration-300 ease-out {isSelected && selectedDate
 			? 'border-primary/40 shadow-md ring-2 ring-primary/20 dark:ring-primary/50'
 			: 'backdrop-blur-sm'}"
 	>
 		<Card.Content class="px-3">
-			<!-- Month Navigation Bar -->
+			<!-- Navigation Bar -->
 			<div class="mb-3 flex items-center justify-between">
 				<div class="flex items-center gap-2 pl-1">
 					<h2 class="text-sm font-semibold tracking-tight text-foreground sm:text-base">
-						{currentMonth?.label}
+						{currentLabel}
 					</h2>
-					{#if (selectedDate && selectedDate !== todayStr) || activeMonthIndex !== currentMonthIndex}
+					{#if (selectedDate && selectedDate !== todayStr) || (isMonthView ? activeMonthIndex !== currentMonthIndex : activeWeekIndex !== currentWeekIndex)}
 						<Button
 							onclick={jumpToToday}
 							variant="outline"
@@ -318,9 +440,10 @@
 					<Button
 						variant="ghost"
 						size="icon-sm"
-						onclick={() => carouselApi?.scrollPrev()}
-						disabled={!canScrollPrev}
-						title="Previous month"
+						onclick={() =>
+							isMonthView ? monthCarouselApi?.scrollPrev() : weekCarouselApi?.scrollPrev()}
+						disabled={isMonthView ? !canScrollPrevMonth : !canScrollPrevWeek}
+						title={isMonthView ? 'Previous month' : 'Previous week'}
 						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronLeft size={16} />
@@ -328,9 +451,10 @@
 					<Button
 						variant="ghost"
 						size="icon-sm"
-						onclick={() => carouselApi?.scrollNext()}
-						disabled={!canScrollNext}
-						title="Next month"
+						onclick={() =>
+							isMonthView ? monthCarouselApi?.scrollNext() : weekCarouselApi?.scrollNext()}
+						disabled={isMonthView ? !canScrollNextMonth : !canScrollNextWeek}
+						title={isMonthView ? 'Next month' : 'Next week'}
 						class="text-muted-foreground hover:bg-muted hover:text-foreground"
 					>
 						<ChevronRight size={16} />
@@ -349,50 +473,108 @@
 				{/each}
 			</div>
 
-			<!-- Month Carousel Slider -->
-			<Carousel.Root
-				opts={{
-					startIndex: currentMonthIndex,
-					align: 'start',
-					loop: false
-				}}
-				setApi={handleCarouselInit}
-				class="w-full"
-			>
-				<Carousel.Content class="-ms-2">
-					{#each months as month (month.id)}
-						<Carousel.Item class="basis-full ps-2">
-							<div class="grid grid-cols-7 gap-1 sm:gap-1.5">
-								{#each month.days as day (day.dateStr)}
-									{@const isCurrentSelected = selectedDate === day.dateStr}
-									{@const hasTodos = datesWithTodos.has(day.dateStr)}
-									<button
-										type="button"
-										disabled={!hasTodos}
-										onclick={() => selectDate(day.dateStr)}
-										class="group relative flex h-9 w-full flex-col items-center justify-center rounded-xl text-center text-xs transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:text-sm
-											{isCurrentSelected
-											? 'bg-primary font-semibold text-primary-foreground shadow-xs'
-											: day.isToday && hasTodos
-												? 'border border-primary/40 bg-primary/10 font-semibold text-primary hover:bg-primary/20 dark:bg-primary/20'
-												: day.isToday
-													? 'border border-muted-foreground/30 font-medium text-foreground'
-													: hasTodos
-														? 'bg-muted/50 font-medium text-foreground hover:bg-muted/80'
-														: day.isCurrentMonth
-															? 'text-muted-foreground/50'
-															: 'text-muted-foreground/20'}"
-									>
-										<span>{day.dayNumber}</span>
-									</button>
-								{/each}
-							</div>
-						</Carousel.Item>
-					{/each}
-				</Carousel.Content>
-			</Carousel.Root>
+			<!-- Carousel Slider: Week View vs Month View -->
+			{#if isMonthView}
+				<Carousel.Root
+					opts={{
+						startIndex: activeMonthIndex,
+						align: 'start',
+						loop: false
+					}}
+					setApi={handleMonthCarouselInit}
+					class="w-full"
+				>
+					<Carousel.Content class="-ms-2">
+						{#each months as month (month.id)}
+							<Carousel.Item class="basis-full ps-2">
+								<div class="grid grid-cols-7 gap-1 sm:gap-1.5">
+									{#each month.days as day (day.dateStr)}
+										{@const isCurrentSelected = selectedDate === day.dateStr}
+										{@const hasTodos = datesWithTodos.has(day.dateStr)}
+										<button
+											type="button"
+											disabled={!hasTodos}
+											onclick={() => selectDate(day.dateStr)}
+											class="group relative flex h-9 w-full flex-col items-center justify-center rounded-xl text-center text-xs transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:text-sm
+												{isCurrentSelected
+												? 'bg-primary font-semibold text-primary-foreground shadow-xs'
+												: day.isToday && hasTodos
+													? 'border border-primary/40 bg-primary/10 font-semibold text-primary hover:bg-primary/20 dark:bg-primary/20'
+													: day.isToday
+														? 'border border-muted-foreground/30 font-medium text-foreground'
+														: hasTodos
+															? 'bg-muted/50 font-medium text-foreground hover:bg-muted/80'
+															: day.isCurrentMonth
+																? 'text-muted-foreground/50'
+																: 'text-muted-foreground/20'}"
+										>
+											<span>{day.dayNumber}</span>
+										</button>
+									{/each}
+								</div>
+							</Carousel.Item>
+						{/each}
+					</Carousel.Content>
+				</Carousel.Root>
+			{:else}
+				<Carousel.Root
+					opts={{
+						startIndex: activeWeekIndex,
+						align: 'start',
+						loop: false
+					}}
+					setApi={handleWeekCarouselInit}
+					class="w-full"
+				>
+					<Carousel.Content class="-ms-2">
+						{#each weeks as week (week.id)}
+							<Carousel.Item class="basis-full ps-2">
+								<div class="grid grid-cols-7 gap-1 sm:gap-1.5">
+									{#each week.days as day (day.dateStr)}
+										{@const isCurrentSelected = selectedDate === day.dateStr}
+										{@const hasTodos = datesWithTodos.has(day.dateStr)}
+										<button
+											type="button"
+											disabled={!hasTodos}
+											onclick={() => selectDate(day.dateStr)}
+											class="group relative flex h-9 w-full flex-col items-center justify-center rounded-xl text-center text-xs transition-all duration-200 outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:text-sm
+												{isCurrentSelected
+												? 'bg-primary font-semibold text-primary-foreground shadow-xs'
+												: day.isToday && hasTodos
+													? 'border border-primary/40 bg-primary/10 font-semibold text-primary hover:bg-primary/20 dark:bg-primary/20'
+													: day.isToday
+														? 'border border-muted-foreground/30 font-medium text-foreground'
+														: hasTodos
+															? 'bg-muted/50 font-medium text-foreground hover:bg-muted/80'
+															: 'text-muted-foreground/50'}"
+										>
+											<span>{day.dayNumber}</span>
+										</button>
+									{/each}
+								</div>
+							</Carousel.Item>
+						{/each}
+					</Carousel.Content>
+				</Carousel.Root>
+			{/if}
+
+			<!-- Toggle View Button (See full month / Show less) -->
+			<div class="mt-2.5 flex justify-center border-t border-border/40 pt-2">
+				<button
+					type="button"
+					onclick={toggleMonthView}
+					class="inline-flex cursor-pointer items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground"
+				>
+					<span>{isMonthView ? 'Show less' : 'See full month'}</span>
+					<ChevronDown
+						size={13}
+						class="transition-transform duration-200 {isMonthView ? 'rotate-180' : ''}"
+					/>
+				</button>
+			</div>
 		</Card.Content>
 	</Card.Root>
+
 	{#if !isSelected}
 		<p class="mt-4 text-center text-sm text-muted-foreground/70">
 			Dates without tasks are disabled.
