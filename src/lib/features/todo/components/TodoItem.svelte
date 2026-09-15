@@ -371,8 +371,8 @@
 			<div class="group relative flex items-center gap-1">
 				{#if !isExpanded && metadata.some((m) => m.value)}
 					<Badge
-						class="relative -right-8 h-6 min-w-6 shrink-0 rounded-full px-0 font-mono text-xs tabular-nums transition-all duration-200 group-hover/item:right-0"
-						variant="destructive">+{metadata.filter((m) => m.value).length}</Badge
+						class="relative -right-8 h-6 min-w-6 shrink-0 rounded-full bg-primary/10 px-0 font-mono text-xs text-primary tabular-nums transition-all duration-200 group-hover/item:right-0"
+						variant="default">+{metadata.filter((m) => m.value).length}</Badge
 					>
 				{/if}
 				<Button
