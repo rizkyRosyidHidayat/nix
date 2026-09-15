@@ -153,38 +153,12 @@
 		return metadata.find((m) => m.field === field)?.input ?? null;
 	}
 
-	function focusPreviousInput(currentField: FieldKey) {
-		const order: ('title' | FieldKey)[] = [
-			'title',
-			'notes',
-			'dateTime',
-			'deadline',
-			'repeat',
-			'priority'
-		];
-		const currentIndex = order.indexOf(currentField);
-
-		for (let i = currentIndex - 1; i >= 0; i--) {
-			const field = order[i];
-			if (field === 'title') {
-				titleInput?.focus();
-				return;
-			}
-			if (getShowState(field as FieldKey)) {
-				const inputRef = getInputRef(field as FieldKey);
-				inputRef?.focus();
-				return;
-			}
-		}
-	}
-
 	async function toggleField(field: FieldKey) {
 		const isCurrentlyShown = getShowState(field);
 
 		if (isCurrentlyShown) {
 			metadata = metadata.filter((m) => m.field !== field);
 			await handleSave();
-			focusPreviousInput(field);
 		} else {
 			let placeHolder = '';
 			switch (field) {
@@ -224,12 +198,6 @@
 		const item = metadata.find((m) => m.field === field);
 		if (item) {
 			item.value = value;
-		}
-
-		if (value === '') {
-			metadata = metadata.filter((m) => m.field !== field);
-			handleSave();
-			focusPreviousInput(field);
 		}
 	}
 
@@ -404,7 +372,7 @@
 		{#if isExpanded}
 			<div class="flex animate-in flex-col gap-3 px-4 duration-150 fade-in-50">
 				<!-- created and completed at -->
-				<div class="flex w-full items-center gap-3 px-1.5 text-xs text-muted-foreground">
+				<div class="flex w-full items-center gap-1 px-1.5 text-xs text-muted-foreground">
 					<p>
 						Created: {formatDateTime(todo.createdAt)}
 					</p>

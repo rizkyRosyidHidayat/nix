@@ -53,10 +53,10 @@
 	</Container>
 {:else}
 	<Container>
-		<h1 class="mb-2 text-center text-3xl font-bold">What's on your mind today?</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold">What do you want to do?</h1>
 		<QuickAction />
 		<p class="text-center text-sm text-muted-foreground/70">
-			Nix is your simple, offline-first task manager.
+			Nix is your simple, local-first task manager.
 		</p>
 	</Container>
 {/if}

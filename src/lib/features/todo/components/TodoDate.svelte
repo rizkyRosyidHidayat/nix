@@ -336,11 +336,7 @@
 	let datesWithTodos = $derived.by(() => {
 		const dates = new SvelteSet<string>();
 		for (const todo of todoState.todos.data) {
-			const targetDate = todo.completedAt
-				? todo.completedAt.split('T')[0]
-				: todo.createdAt
-					? todo.createdAt.split('T')[0]
-					: '';
+			const targetDate = todo.createdAt ? todo.createdAt.split('T')[0] : '';
 			if (targetDate) {
 				dates.add(targetDate);
 			}

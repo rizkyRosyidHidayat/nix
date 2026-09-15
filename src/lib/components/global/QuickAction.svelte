@@ -50,7 +50,7 @@
 		}[]
 	>([]);
 
-	let hasTitle = $derived(title.trim().length > 0);
+	let hasTitle = $derived(title.trim().length >= 3);
 
 	$effect(() => {
 		if (titleInput) {
@@ -357,7 +357,7 @@
 					<DropdownMenu.Trigger>
 						<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
 						{#snippet child({ props }: any)}
-							{#if hasTitle && title?.length >= 3}
+							{#if hasTitle}
 								<Button size="icon-xs" variant="ghost" class="mt-0.5" {...props}>
 									<ChevronDown />
 								</Button>
@@ -398,7 +398,10 @@
 				</DropdownMenu.Root>
 			</div>
 			<div class="flex items-center gap-2">
-				<Kbd>Enter</Kbd>
+				<Kbd
+					class="transition-opacity duration-200 ease-in {hasTitle ? 'opacity-100' : 'opacity-0'}"
+					>Enter</Kbd
+				>
 				<Button size="sm" disabled={!hasTitle} onclick={handleCreate}>Save</Button>
 			</div>
 		</div>

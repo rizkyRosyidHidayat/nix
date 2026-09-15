@@ -1,6 +1,6 @@
 # Nix - A Simple and Beautiful Todo App
 
-**Nix** is a modern, offline-first task management application built with **Svelte 5 (Runes)**, **SvelteKit**, **Tailwind CSS v4**, and **Dexie (IndexedDB)**. Designed with fluid micro-animations, natural language date parsing, and an interactive stacked card interface.
+**Nix** is a modern, local-first task management application built with **Svelte 5 (Runes)**, **SvelteKit**, **Tailwind CSS v4**, and **Dexie (IndexedDB)**. Designed with fluid micro-animations, natural language date parsing, and an interactive stacked card interface.
 
 ---
 
@@ -12,7 +12,7 @@
 - **🗓️ Weekly Calendar Carousel**: Browse tasks by date using an interactive weekly carousel that highlights dates with active todos.
 - **⏱️ Task Countdown & Snooze Modal**: Auto-prompt countdown modal for upcoming time-sensitive tasks with snooze (15-min) and stop controls.
 - **🔍 Quick Search**: Instant search filtering across titles, notes, and priority tags with keyboard shortcuts (`Enter`, `ESC`).
-- **💾 Local-First & Privacy-Focused**: All your data remains in your browser using IndexedDB (via Dexie.js) — fast, responsive, and works offline.
+- **💾 Local-First & Privacy-Focused**: All your data remains in your browser using IndexedDB (via Dexie.js) — fast, responsive, and works in local.
 - **🌓 Dark / Light Mode**: Integrated theme toggle with system preference support via `mode-watcher`.
 
 ---

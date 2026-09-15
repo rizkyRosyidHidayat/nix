@@ -88,8 +88,7 @@ function matchesDate(todo: Todo, targetDate: string): boolean {
 	if (!targetDate) return false;
 	const filterDate = new Date(targetDate).getTime();
 	const createdDate = new Date(todo.createdAt.split('T')[0]).getTime();
-	const completedDate = todo.completedAt ? new Date(todo.completedAt.split('T')[0]).getTime() : null;
-	return completedDate ? completedDate === filterDate : createdDate === filterDate;
+	return createdDate === filterDate;
 }
 
 function formatDateStr(d: Date): string {
