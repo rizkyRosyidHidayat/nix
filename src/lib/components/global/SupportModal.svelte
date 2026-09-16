@@ -21,7 +21,7 @@
 	></div>
 
 	<div
-		class="absolute top-1/2 left-1/2 z-10 w-full max-w-md -translate-x-1/2 -translate-y-1/2"
+		class="absolute top-1/2 left-1/2 z-10 w-full max-w-md -translate-x-1/2 -translate-y-1/2 px-4"
 		transition:fade={{ duration: 200 }}
 	>
 		<Card.Root class="mx-auto">
@@ -39,7 +39,8 @@
 			</Card.Header>
 			<Card.Content>
 				<p class="mb-6 text-center text-muted-foreground">
-					If you find Nix helpful, consider starring the repository or buying a coffee to support its development.
+					If you find Nix helpful, consider starring the repository or buying a coffee to support
+					its development.
 				</p>
 
 				<div class="flex flex-col gap-3">

@@ -101,7 +101,7 @@
 	{#if showQuickAction}
 		<div
 			transition:slide={{ axis: 'y', duration: 200 }}
-			class="absolute bottom-full left-1/2 mb-4 w-full -translate-x-1/2"
+			class="absolute bottom-full left-1/2 mb-4 w-full -translate-x-1/2 px-4"
 		>
 			<QuickAction oncreate={() => (showQuickAction = false)} />
 		</div>

@@ -8,7 +8,6 @@
 	import { resolve } from '$app/paths';
 	import { onMount, untrack } from 'svelte';
 
-	let isLoading = $derived(todoState.upcomingTodos.isLoading);
 	let mutationState = $derived(todoState.createMutation.state);
 	let countdown = $state(10);
 
@@ -57,13 +56,11 @@
 	}
 </script>
 
-{#if isLoading}
+{#if mutationState === 'success'}
 	<Container>
-		<h1 class="text-center text-xl leading-relaxed text-muted-foreground">Loading your tasks...</h1>
-	</Container>
-{:else if mutationState === 'success'}
-	<Container>
-		<h1 class="text-center text-3xl font-bold">You're all set! Let's get things done.</h1>
+		<h1 class="text-center text-2xl font-bold sm:text-3xl">
+			You're all set! Let's get things done.
+		</h1>
 		<p class="text-center text-sm text-muted-foreground">
 			Redirecting to pending tasks in <span class="font-medium text-foreground">{countdown}s</span>
 			<button
@@ -90,7 +87,7 @@
 	</Container>
 {:else}
 	<Container>
-		<h1 class="mb-2 text-center text-3xl font-bold">What do you want to do?</h1>
+		<h1 class="mb-2 text-center text-2xl font-bold sm:text-3xl">What do you want to do?</h1>
 		<QuickAction />
 		<p class="text-center text-sm text-muted-foreground">
 			Nix is your simple, local-first task manager.

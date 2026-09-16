@@ -68,7 +68,7 @@
 	{/if}
 
 	{#if isLoading}
-		<p class="py-12 text-center text-muted-foreground">Loading todos...</p>
+		<p class="py-12 text-center text-xl text-muted-foreground">Loading todos...</p>
 	{:else if tab === 'pending'}
 		<TodoStackedList {todos} {groupedTodos} />
 	{:else if tab === 'all'}

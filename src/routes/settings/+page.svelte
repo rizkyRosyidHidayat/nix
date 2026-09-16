@@ -9,6 +9,6 @@
 </svelte:head>
 
 <Container>
-	<h1 class="mb-2 text-center text-3xl font-bold">Settings</h1>
+	<h1 class="mb-2 text-center text-2xl font-bold sm:text-3xl">Settings</h1>
 	<SettingTheme />
 </Container>

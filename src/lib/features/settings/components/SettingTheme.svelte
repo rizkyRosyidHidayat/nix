@@ -18,7 +18,7 @@
 </script>
 
 <Card.Root class="w-full py-4">
-	<Card.Header class="flex flex-row items-center justify-between gap-4">
+	<Card.Header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex flex-col gap-1">
 			<Card.Title class="text-base">Application Theme</Card.Title>
 			<p class="text-sm text-muted-foreground">
