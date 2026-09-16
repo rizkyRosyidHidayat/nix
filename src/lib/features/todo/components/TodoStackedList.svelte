@@ -154,7 +154,8 @@
 				: 'max-h-8 opacity-100'}"
 			style="margin-top: {allTodos.length * 12}px"
 		>
-			Hover the todo to expand
+			<span class="hidden md:inline">Hover the todo to expand</span>
+			<span class="md:hidden">Tap to expand</span>
 		</p>
 	{/if}
 </div>

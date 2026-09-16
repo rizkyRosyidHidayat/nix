@@ -27,13 +27,13 @@
 				>
 			</p>
 		</div>
-		<div class="flex items-center gap-0.5 rounded-full border bg-card p-0.5">
+		<div class="flex w-full items-center gap-0.5 rounded-full border bg-card p-0.5 sm:w-auto">
 			{#each themeOptions as option (option.value)}
 				{@const isActive = currentMode === option.value}
 				<Button
 					variant={isActive ? 'default' : 'ghost'}
 					size="sm"
-					class="gap-1.5 rounded-full px-3 text-xs font-normal transition-all duration-200 {isActive
+					class="flex-1 gap-1.5 rounded-full px-3 text-xs font-normal transition-all duration-200 sm:flex-none {isActive
 						? 'shadow-sm'
 						: 'hover:bg-muted'}"
 					onclick={() => handleSetTheme(option.value)}
