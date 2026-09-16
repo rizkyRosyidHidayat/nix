@@ -7,21 +7,66 @@ class TodoTimerState {
 	public targetTimeMs = $state<number | null>(null);
 	public isOpen = $state(false);
 
-	// Track stopped/snoozed (in memory for now, or could use localStorage)
+	// Track stopped/snoozed (persisted in localStorage)
 	private stoppedTodos = new Set<string>();
 	private snoozedTodos = new Map<string, number>(); // id -> snooze until ms
 
 	private intervalId: ReturnType<typeof setInterval> | undefined;
 
+	constructor() {
+		this.loadPersistedState();
+	}
+
+	private loadPersistedState() {
+		if (typeof window === 'undefined') return;
+		try {
+			const snoozedRaw = localStorage.getItem('hinix_snoozed_todos');
+			if (snoozedRaw) {
+				const entries: [string, number][] = JSON.parse(snoozedRaw);
+				const now = Date.now();
+				// Filter out snoozes that have already expired
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				this.snoozedTodos = new Map(entries.filter(([_, until]) => until > now));
+			}
+			const stoppedRaw = localStorage.getItem('hinix_stopped_todos');
+			if (stoppedRaw) {
+				const list: string[] = JSON.parse(stoppedRaw);
+				this.stoppedTodos = new Set(list.map(String));
+			}
+		} catch (e) {
+			console.error('Failed to load persisted timer state', e);
+		}
+	}
+
+	private savePersistedState() {
+		if (typeof window === 'undefined') return;
+		try {
+			localStorage.setItem(
+				'hinix_snoozed_todos',
+				JSON.stringify(Array.from(this.snoozedTodos.entries()))
+			);
+			localStorage.setItem(
+				'hinix_stopped_todos',
+				JSON.stringify(Array.from(this.stoppedTodos))
+			);
+		} catch (e) {
+			console.error('Failed to save persisted timer state', e);
+		}
+	}
+
 	start() {
 		if (typeof window === 'undefined') return;
+		this.loadPersistedState();
 		this.checkTimers(); // Check immediately
-		this.intervalId = setInterval(() => this.checkTimers(), 1000); // Check every second to keep countdown accurate
+		if (!this.intervalId) {
+			this.intervalId = setInterval(() => this.checkTimers(), 1000); // Check every second to keep countdown accurate
+		}
 	}
 
 	stop() {
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
+			this.intervalId = undefined;
 		}
 	}
 
@@ -53,13 +98,17 @@ class TodoTimerState {
 		return isNaN(timestamp) ? null : timestamp;
 	}
 
-	private checkTimers() {
+	public checkTimers() {
+		if (typeof window === 'undefined') return;
+		if (todoState.upcomingTodos.isLoading) return;
+
 		const now = Date.now();
 		const upcoming = todoState.upcomingTodos.data;
 
 		// If modal is currently open, verify the active todo is still upcoming and incomplete
 		if (this.isOpen && this.activeTodo) {
-			const isStillValid = upcoming.some((t) => t.id === this.activeTodo?.id && !t.isCompleted);
+			const activeId = String(this.activeTodo.id);
+			const isStillValid = upcoming.some((t) => String(t.id) === activeId && !t.isCompleted);
 			if (!isStillValid) {
 				this.closeModal();
 			}
@@ -67,9 +116,10 @@ class TodoTimerState {
 		}
 
 		for (const todo of upcoming) {
-			if (this.stoppedTodos.has(todo.id)) continue;
+			const id = String(todo.id);
+			if (this.stoppedTodos.has(id)) continue;
 
-			const snoozeUntil = this.snoozedTodos.get(todo.id);
+			const snoozeUntil = this.snoozedTodos.get(id);
 			if (snoozeUntil && now < snoozeUntil) continue;
 
 			const targetMs = this.getTargetTimeMs(todo);
@@ -84,7 +134,8 @@ class TodoTimerState {
 				this.activeTodo = todo;
 				this.targetTimeMs = targetMs;
 				this.isOpen = true;
-				this.snoozedTodos.delete(todo.id);
+				this.snoozedTodos.delete(id);
+				this.savePersistedState();
 				break; // Only open for one todo at a time
 			}
 		}
@@ -92,16 +143,20 @@ class TodoTimerState {
 
 	stopTimerForActive() {
 		if (this.activeTodo) {
-			this.stoppedTodos.add(this.activeTodo.id);
-			this.snoozedTodos.delete(this.activeTodo.id);
+			const id = String(this.activeTodo.id);
+			this.stoppedTodos.add(id);
+			this.snoozedTodos.delete(id);
+			this.savePersistedState();
 		}
 		this.closeModal();
 	}
 
 	snoozeActiveFor15Mins() {
 		if (this.activeTodo) {
+			const id = String(this.activeTodo.id);
 			const snoozeUntil = Date.now() + 15 * 60 * 1000;
-			this.snoozedTodos.set(this.activeTodo.id, snoozeUntil);
+			this.snoozedTodos.set(id, snoozeUntil);
+			this.savePersistedState();
 		}
 		this.closeModal();
 	}

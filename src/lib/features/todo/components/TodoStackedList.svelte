@@ -4,6 +4,7 @@
 	import { groupTodosByDate } from '$lib/features/todo';
 	import { Calendar } from '@lucide/svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	const MAX_VISIBLE = 3;
 	let {
@@ -137,11 +138,13 @@
 				: 'max-h-12 opacity-100'}"
 			style="margin-top: {allTodos.length * 12}px"
 		>
-			<button
-				class="inline-flex items-center gap-1.5 rounded-full bg-card/50 px-3 py-1 text-xs text-muted-foreground ring-1 ring-background/60 backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+			<Button
+				variant="outline"
+				size="sm"
+				class="rounded-full border-card/60 bg-card/50 text-xs text-muted-foreground"
 			>
 				<span>+{hiddenCount} more</span>
-			</button>
+			</Button>
 		</div>
 	{/if}
 	{#if !hasHidden && allTodos.length}

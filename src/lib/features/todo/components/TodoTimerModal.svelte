@@ -76,7 +76,7 @@
 				{/if}
 				<Button
 					variant="link"
-					class="gap-2 text-foreground"
+					class="gap-2 text-muted-foreground"
 					onclick={() => todoTimerState.stopTimerForActive()}
 				>
 					Dismiss
