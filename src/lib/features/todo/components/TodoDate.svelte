@@ -503,7 +503,7 @@
 													: day.isToday
 														? 'border border-muted-foreground/30 font-medium text-foreground'
 														: hasTodos
-															? 'bg-muted/80 font-medium text-foreground'
+															? 'bg-muted/70 font-medium text-foreground hover:bg-muted'
 															: day.isCurrentMonth
 																? 'text-muted-foreground/50'
 																: 'text-muted-foreground/20'}"
@@ -545,7 +545,7 @@
 													: day.isToday
 														? 'border border-muted-foreground/30 font-medium text-foreground'
 														: hasTodos
-															? 'bg-muted/80 font-medium text-foreground'
+															? 'bg-muted/70 font-medium text-foreground hover:bg-muted'
 															: 'text-muted-foreground/50'}"
 										>
 											<span>{day.dayNumber}</span>

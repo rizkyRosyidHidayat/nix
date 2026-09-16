@@ -29,6 +29,12 @@
 	function handleSetTab(value: TabMode) {
 		tab = value;
 	}
+
+	$effect(() => {
+		if (!isLoading && !todos.length) {
+			handleSetTab('all');
+		}
+	});
 </script>
 
 <svelte:head>
