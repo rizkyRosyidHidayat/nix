@@ -10,6 +10,11 @@
 	import { todoTimerState } from '$lib/features/todo/todo.timer.svelte';
 	import AmbientBackground from '$lib/components/global/AmbientBackground.svelte';
 
+	import { dev } from '$app/environment';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
+
+	injectAnalytics({ mode: dev ? 'development' : 'production' });
+
 	let { children } = $props();
 
 	$effect(() => {
