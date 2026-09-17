@@ -3,7 +3,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Kbd from '$lib/components/ui/kbd/kbd.svelte';
-	import { ChevronDown, Calendar, Clock, Repeat, Flag, FileText, Check } from '@lucide/svelte';
+	import { Calendar, Clock, Repeat, Flag, FileText, Check, Plus } from '@lucide/svelte';
 	import { todoState } from '$lib/features/todo';
 	import { tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -226,41 +226,6 @@
 		if (item) {
 			item.value = value;
 		}
-
-		if (value === '') {
-			const orderBeforeRemove: ('title' | FieldKey)[] = ['title', ...metadata.map((m) => m.field)];
-
-			// User backspaced past prefix — auto-remove
-			switch (field) {
-				case 'notes':
-					showNotes = false;
-					notesValue = '';
-					metadata = metadata.filter((m) => m.field !== 'notes');
-					break;
-				case 'dateTime':
-					showDateTime = false;
-					dateTimeValue = '';
-					metadata = metadata.filter((m) => m.field !== 'dateTime');
-					break;
-				case 'deadline':
-					showDeadline = false;
-					deadlineValue = '';
-					metadata = metadata.filter((m) => m.field !== 'deadline');
-					break;
-				case 'repeat':
-					showRepeat = false;
-					repeatValue = '';
-					metadata = metadata.filter((m) => m.field !== 'repeat');
-					break;
-				case 'priority':
-					showPriority = false;
-					priorityValue = '';
-					metadata = metadata.filter((m) => m.field !== 'priority');
-					break;
-			}
-
-			await focusPreviousInput(field, orderBeforeRemove);
-		}
 	}
 
 	async function handleCreate() {
@@ -332,7 +297,7 @@
 >
 	<Card.Content class="pr-4">
 		<div class="flex flex-wrap items-center justify-end gap-4">
-			<div class="mr-auto flex min-w-[80%] flex-wrap items-center gap-1">
+			<div class="mr-auto flex min-w-[80%] flex-wrap items-center gap-1 text-muted-foreground">
 				<input
 					type="text"
 					bind:this={titleInput}
@@ -345,7 +310,7 @@
 						}
 					}}
 					placeholder="Add a new task..."
-					class="outline-none placeholder:text-muted-foreground {hasTitle
+					class="text-foreground outline-none placeholder:text-muted-foreground {hasTitle
 						? 'field-sizing-content'
 						: 'w-full'}"
 				/>
@@ -369,8 +334,8 @@
 						<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
 						{#snippet child({ props }: any)}
 							{#if hasTitle}
-								<Button size="icon-xs" variant="ghost" class="mt-0.5" {...props}>
-									<ChevronDown />
+								<Button size="icon-xs" variant="ghost" class="mt-0.5 text-foreground" {...props}>
+									<Plus />
 								</Button>
 							{/if}
 						{/snippet}
